@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
@@ -77,10 +77,16 @@ export default function Admin() {
           <h1 className="text-xl sm:text-2xl font-bold text-white">Admin Console</h1>
           <p className="text-xs text-gray-500 mt-0.5">Logged in as {profile.full_name}</p>
         </div>
-        <button onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
-          className="self-start sm:self-auto text-xs text-gray-500 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg transition-colors">
-          Sign out
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <Link to="/admin/rooms"
+            className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 border border-brand-800 hover:border-brand-600 px-3 py-1.5 rounded-lg transition-colors">
+            💬 Rooms
+          </Link>
+          <button onClick={async () => { await supabase.auth.signOut(); navigate('/'); }}
+            className="text-xs text-gray-500 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg transition-colors">
+            Sign out
+          </button>
+        </div>
       </div>
 
       {/* Tabs — horizontal scroll on mobile */}

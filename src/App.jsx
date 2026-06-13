@@ -10,6 +10,7 @@ import MyEvents from './pages/MyEvents';
 import Admin from './pages/Admin';
 import AdminEventDetail from './pages/AdminEventDetail';
 import AdminLogin from './pages/AdminLogin';
+import AdminRooms from './pages/AdminRooms';
 
 // Hide the public navbar on all /admin/* routes
 function Layout({ children }) {
@@ -40,6 +41,7 @@ export default function App() {
             {/* Admin — completely separate, not linked from public UI */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<Admin />} />
+            <Route path="/admin/rooms" element={<AdminRooms />} />
             <Route path="/admin/event/:eventId" element={<AdminEventDetail />} />
           </Routes>
         </Layout>

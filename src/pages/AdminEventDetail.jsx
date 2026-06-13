@@ -182,9 +182,21 @@ export default function AdminEventDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-      <button onClick={() => navigate('/admin/dashboard')} className="text-sm text-gray-500 hover:text-white mb-4 flex items-center gap-1 transition-colors">
-        ← Back to Admin
-      </button>
+      <div className="flex items-center justify-between mb-4 gap-3">
+        <button onClick={() => navigate('/admin/dashboard')} className="text-sm text-gray-500 hover:text-white flex items-center gap-1 transition-colors">
+          ← Back to Admin
+        </button>
+        <button
+          onClick={async () => {
+            // Find the room for this event
+            const { data } = await supabase.from('chat_rooms').select('id').eq('event_id', eventId).maybeSingle();
+            if (data) navigate(`/admin/rooms?room=${data.id}`);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-700 hover:bg-brand-600 text-xs font-medium text-white transition-colors"
+        >
+          💬 Open Chat Room
+        </button>
+      </div>
       <h1 className="text-lg sm:text-xl font-bold text-white mb-5 truncate">{event.title}</h1>
 
       {/* Mobile toggle */}
