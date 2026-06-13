@@ -27,6 +27,10 @@ export default function Admin() {
   const [profileMsg, setProfileMsg] = useState('');
   const [profileMsgType, setProfileMsgType] = useState('success');
 
+  // Applications (main admin only)
+  const [applications, setApplications] = useState([]);
+  const [appsLoading, setAppsLoading] = useState(false);
+
   // Team (main admin only)
   const [subAdmins, setSubAdmins] = useState([]);
   const [subAdminsLoading, setSubAdminsLoading] = useState(false);
@@ -42,6 +46,7 @@ export default function Admin() {
     { label: '🗂 Events', short: 'Events' },
     { label: '👤 Profile', short: 'Profile' },
     ...(isMainAdmin ? [{ label: '👥 Team', short: 'Team' }] : []),
+    ...(isMainAdmin ? [{ label: '📋 Applications', short: 'Apps' }] : []),
   ];
 
   useEffect(() => {
@@ -60,6 +65,7 @@ export default function Admin() {
   // Load team data when Team tab is opened
   useEffect(() => {
     if (view === 4 && isMainAdmin) { fetchSubAdmins(); fetchPendingInvites(); }
+    if (view === 5 && isMainAdmin) { fetchApplications(); }
   }, [view]);
 
   // ── Data fetching ───────────────────────────────────────────────
@@ -110,6 +116,21 @@ export default function Admin() {
       .not('invited_email', 'is', null)
       .order('created_at', { ascending: false });
     setPendingInvites(data ?? []);
+  }
+
+  async function fetchApplications() {
+    setAppsLoading(true);
+    const { data } = await supabase
+      .from('team_applications')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setApplications(data ?? []);
+    setAppsLoading(false);
+  }
+
+  async function updateAppStatus(id, status) {
+    await supabase.from('team_applications').update({ status }).eq('id', id);
+    setApplications(prev => prev.map(a => a.id === id ? { ...a, status } : a));
   }
 
   async function sendInvite(e) {
@@ -573,6 +594,75 @@ export default function Admin() {
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* ── View 5: Applications (main admin only) ── */}
+      {view === 5 && isMainAdmin && (
+        <div className="max-w-2xl space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-sm font-semibold text-white">Join Team Applications</h2>
+            <span className="text-xs text-gray-500">{applications.length} total</span>
+          </div>
+
+          {appsLoading ? (
+            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-28 rounded-xl bg-gray-800 animate-pulse" />)}</div>
+          ) : applications.length === 0 ? (
+            <div className="text-center py-16 border border-dashed border-gray-800 rounded-2xl">
+              <p className="text-3xl mb-2">📋</p>
+              <p className="text-gray-500 text-sm">No applications yet.</p>
+              <p className="text-gray-600 text-xs mt-1">Applications from the Join Team button will appear here.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {applications.map(app => (
+                <div key={app.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-brand-800 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                        {app.full_name?.[0]?.toUpperCase() ?? '?'}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{app.full_name}</p>
+                        <p className="text-xs text-gray-400">{app.email}</p>
+                        {app.contact && <p className="text-xs text-gray-500">{app.contact}</p>}
+                      </div>
+                    </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium shrink-0 ${
+                      app.status === 'pending'  ? 'bg-yellow-900/40 text-yellow-400 border border-yellow-800/40' :
+                      app.status === 'accepted' ? 'bg-green-900/40 text-green-400 border border-green-800/40' :
+                      app.status === 'rejected' ? 'bg-red-900/40 text-red-400 border border-red-800/40' :
+                      'bg-gray-800 text-gray-400 border border-gray-700'
+                    }`}>
+                      {app.status}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-300 leading-relaxed bg-gray-800/50 rounded-lg px-3 py-2">
+                    {app.description}
+                  </p>
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-gray-600">
+                      {new Date(app.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                    </p>
+                    {app.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button onClick={() => updateAppStatus(app.id, 'accepted')}
+                          className="px-3 py-1.5 rounded-lg bg-green-900/40 hover:bg-green-900/70 text-green-400 text-xs font-medium transition-colors">
+                          Accept
+                        </button>
+                        <button onClick={() => updateAppStatus(app.id, 'rejected')}
+                          className="px-3 py-1.5 rounded-lg bg-red-900/40 hover:bg-red-900/70 text-red-400 text-xs font-medium transition-colors">
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

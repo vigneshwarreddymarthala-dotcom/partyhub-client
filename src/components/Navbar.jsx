@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUnread } from '../context/UnreadContext';
 import { supabase } from '../lib/supabase';
+import JoinTeamModal from './JoinTeamModal';
 
 export default function Navbar() {
   const { session, profile } = useAuth();
@@ -10,6 +11,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
 
   async function handleSignOut() {
     setMenuOpen(false);
@@ -20,6 +22,7 @@ export default function Navbar() {
   const initial = profile?.full_name?.[0]?.toUpperCase() ?? '?';
 
   return (
+    <>
     <nav className="sticky top-0 z-50 border-b border-gray-800 overflow-hidden" style={{ background: 'rgba(17,24,39,0.92)' }}>
 
       {/* Party lights */}
@@ -64,6 +67,10 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <div className="hidden sm:flex items-center gap-3">
+          <button onClick={() => setJoinOpen(true)}
+            className="px-3 py-1.5 rounded-full border border-brand-600 text-brand-400 hover:bg-brand-600 hover:text-white text-sm font-medium transition-colors">
+            Join Team
+          </button>
           {session ? (
             <>
               <Link to="/my-events"
@@ -119,6 +126,10 @@ export default function Navbar() {
       {/* Mobile dropdown */}
       {menuOpen && (
         <div className="sm:hidden border-t border-gray-800 bg-gray-900 px-4 py-3 flex flex-col gap-1">
+          <button onClick={() => { setMenuOpen(false); setJoinOpen(true); }}
+            className="px-3 py-2.5 rounded-lg text-sm font-medium text-brand-400 hover:bg-brand-900/40 transition-colors text-left">
+            🤝 Join Team
+          </button>
           {session ? (
             <>
               <Link to="/" onClick={() => setMenuOpen(false)}
@@ -158,5 +169,8 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+
+    {joinOpen && <JoinTeamModal onClose={() => setJoinOpen(false)} />}
+  </>
   );
 }
