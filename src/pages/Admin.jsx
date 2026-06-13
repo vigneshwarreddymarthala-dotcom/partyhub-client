@@ -26,7 +26,7 @@ export default function Admin() {
   useEffect(() => {
     if (authLoading) return;
     if (!session || profile?.role !== 'admin') {
-      navigate('/');
+      navigate('/admin/login');
     }
   }, [session, profile, authLoading]);
 
@@ -209,6 +209,7 @@ export default function Admin() {
                   <div className="flex gap-2 shrink-0">
                     <Link
                       to={`/admin/event/${ev.id}`}
+
                       className="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors"
                     >
                       Manage

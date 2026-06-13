@@ -51,6 +51,10 @@ export default function ProfilePage() {
     await refreshProfile();
     setSuccess(true);
     setLoading(false);
+    // If this is a new profile (no existing profile), send them home to browse events
+    if (!profile) {
+      setTimeout(() => navigate('/'), 900);
+    }
   }
 
   return (
@@ -107,7 +111,7 @@ export default function ProfilePage() {
         )}
         {success && (
           <p className="text-green-400 text-xs bg-green-900/20 border border-green-800/40 rounded-lg px-3 py-2">
-            Profile saved!
+            {profile ? 'Profile saved!' : 'Profile created! Taking you to events…'}
           </p>
         )}
 

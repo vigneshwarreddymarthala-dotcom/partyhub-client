@@ -23,14 +23,59 @@ export default function Login() {
     setLoading(true);
 
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError(error.message); setLoading(false); return; }
-      navigate('/');
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      // Check if profile exists — if not, send them to create one
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      navigate(prof ? '/' : '/profile');
+
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) { setError(error.message); setLoading(false); return; }
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      if (!data.session) {
+        // Email confirmation still ON — show instructions
+        setError('');
+        setLoading(false);
+        setMode('confirm');
+        return;
+      }
+      // Session created immediately (email confirm disabled) — go set up profile
       navigate('/profile');
     }
+  }
+
+  // Waiting-for-email-confirmation state
+  if (mode === 'confirm') {
+    return (
+      <div className="min-h-[calc(100vh-56px)] flex items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="text-5xl mb-4">📬</div>
+          <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
+          <p className="text-gray-400 text-sm">
+            We sent a confirmation link to <span className="text-white">{email}</span>.
+            Click it, then come back to sign in.
+          </p>
+          <button
+            onClick={() => setMode('login')}
+            className="mt-6 text-brand-400 text-sm hover:underline"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -49,6 +94,7 @@ export default function Login() {
             <input
               type="email"
               required
+              autoFocus
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
@@ -86,13 +132,13 @@ export default function Login() {
         <p className="text-center text-sm text-gray-500 mt-4">
           {mode === 'login' ? (
             <>Don't have an account?{' '}
-              <button onClick={() => setMode('register')} className="text-brand-400 hover:underline">
+              <button onClick={() => { setMode('register'); setError(''); }} className="text-brand-400 hover:underline">
                 Sign up
               </button>
             </>
           ) : (
             <>Already have an account?{' '}
-              <button onClick={() => setMode('login')} className="text-brand-400 hover:underline">
+              <button onClick={() => { setMode('login'); setError(''); }} className="text-brand-400 hover:underline">
                 Sign in
               </button>
             </>

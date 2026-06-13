@@ -27,14 +27,6 @@ export default function Navbar() {
               >
                 My Rooms
               </Link>
-              {profile?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="text-sm text-brand-400 hover:text-brand-300 font-medium transition-colors"
-                >
-                  Admin
-                </Link>
-              )}
               <Link to="/profile" className="flex items-center gap-2 group">
                 <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-sm font-semibold text-white">
                   {profile?.full_name?.[0]?.toUpperCase() ?? '?'}

@@ -22,7 +22,7 @@ export default function AdminEventDetail() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!session || profile?.role !== 'admin') { navigate('/'); return; }
+    if (!session || profile?.role !== 'admin') { navigate('/admin/login'); return; }
     fetchEvent();
     fetchGuests();
   }, [eventId, authLoading, profile]);
@@ -112,7 +112,7 @@ export default function AdminEventDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <button onClick={() => navigate('/admin')} className="text-sm text-gray-500 hover:text-white mb-4 flex items-center gap-1 transition-colors">
+      <button onClick={() => navigate('/admin/dashboard')} className="text-sm text-gray-500 hover:text-white mb-4 flex items-center gap-1 transition-colors">
         ← Back to Admin
       </button>
       <h1 className="text-xl font-bold text-white mb-6 truncate">{event.title}</h1>
