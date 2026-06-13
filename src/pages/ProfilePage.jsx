@@ -36,7 +36,7 @@ export default function ProfilePage() {
     const payload = {
       id: session.user.id,
       full_name: fullName.trim(),
-      username: username.trim().toLowerCase(),
+      username: username.trim(),
       bio: bio.trim(),
       role: profile?.role ?? 'user',
     };
@@ -84,12 +84,9 @@ export default function ProfilePage() {
             required
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            pattern="[a-z0-9_]{3,20}"
-            title="3–20 characters, lowercase letters, numbers, underscores only"
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
             placeholder="janedoe"
           />
-          <p className="text-xs text-gray-600 mt-1">Lowercase, 3–20 chars, a–z 0–9 _</p>
         </div>
 
         <div>
