@@ -20,8 +20,43 @@ export default function Navbar() {
   const initial = profile?.full_name?.[0]?.toUpperCase() ?? '?';
 
   return (
-    <nav className="sticky top-0 z-50 bg-gray-900/90 backdrop-blur border-b border-gray-800">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+    <nav className="sticky top-0 z-50 border-b border-gray-800 overflow-hidden" style={{ background: 'rgba(17,24,39,0.92)' }}>
+
+      {/* Party lights */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[
+          { color: '#ff3cac', left: '5%',  size: 80,  dur: 3.2, delay: 0 },
+          { color: '#784ba0', left: '15%', size: 60,  dur: 2.8, delay: 0.5 },
+          { color: '#2b86c5', left: '27%', size: 90,  dur: 3.6, delay: 1.0 },
+          { color: '#ff6b6b', left: '40%', size: 70,  dur: 2.5, delay: 0.3 },
+          { color: '#ffd93d', left: '53%', size: 85,  dur: 3.9, delay: 0.8 },
+          { color: '#6bcb77', left: '65%', size: 65,  dur: 2.7, delay: 1.4 },
+          { color: '#ff3cac', left: '76%', size: 75,  dur: 3.1, delay: 0.2 },
+          { color: '#2b86c5', left: '87%', size: 55,  dur: 2.9, delay: 0.9 },
+          { color: '#ffd93d', left: '95%', size: 70,  dur: 3.4, delay: 0.6 },
+        ].map((light, i) => (
+          <div
+            key={i}
+            className="absolute -top-6 rounded-full opacity-30"
+            style={{
+              left: light.left,
+              width: light.size,
+              height: light.size,
+              background: `radial-gradient(circle, ${light.color} 0%, transparent 70%)`,
+              animation: `partyPulse ${light.dur}s ease-in-out ${light.delay}s infinite alternate`,
+            }}
+          />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes partyPulse {
+          0%   { transform: translateY(0px) scale(1);   opacity: 0.25; }
+          100% { transform: translateY(8px) scale(1.2); opacity: 0.45; }
+        }
+      `}</style>
+
+      <div className="relative max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="text-xl font-bold text-brand-400 tracking-tight shrink-0">
           PartyHub 🎉
