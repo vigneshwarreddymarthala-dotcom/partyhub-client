@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import RSVPModal from '../components/RSVPModal';
 import CancelModal from '../components/CancelModal';
+import EventImageCarousel from '../components/EventImageCarousel';
 
 export default function EventDetail() {
   const { eventId } = useParams();
@@ -72,6 +73,7 @@ export default function EventDetail() {
   const mapsHref = event.maps_url
     ? /^https?:\/\//i.test(event.maps_url) ? event.maps_url : `https://${event.maps_url}`
     : null;
+  const images = [event.image_url, event.image_url_2, event.image_url_3].filter(Boolean);
 
   return (
     <>
@@ -81,11 +83,13 @@ export default function EventDetail() {
           ← Back
         </button>
 
-        {/* Hero */}
-        <div className="h-48 sm:h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-800 to-purple-900 mb-5 relative">
-          {event.image_url && <img src={event.image_url} alt={event.title} className="w-full h-full object-cover" />}
+        {/* Hero / Carousel */}
+        <div className="h-56 sm:h-72 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-800 to-purple-900 mb-5 relative">
+          {images.length > 0
+            ? <EventImageCarousel images={images} />
+            : null}
           {isEnded && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
               <span className="px-4 py-2 rounded-full bg-gray-800 text-gray-300 font-medium text-sm">Event Ended</span>
             </div>
           )}

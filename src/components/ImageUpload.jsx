@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function ImageUpload({ currentUrl, onUpload }) {
+export default function ImageUpload({ currentUrl, onUpload, label = 'Event Photo' }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl || null);
 
@@ -36,7 +36,7 @@ export default function ImageUpload({ currentUrl, onUpload }) {
 
   return (
     <div>
-      <label className="block text-xs text-gray-400 mb-1">Event Photo</label>
+      <label className="block text-xs text-gray-400 mb-1">{label}</label>
 
       {/* Preview */}
       {preview && (

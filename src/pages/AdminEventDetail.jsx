@@ -55,6 +55,8 @@ export default function AdminEventDetail() {
       capacity: String(data.capacity ?? ''),
       status: data.status ?? 'active',
       image_url: data.image_url ?? '',
+      image_url_2: data.image_url_2 ?? '',
+      image_url_3: data.image_url_3 ?? '',
       maps_url: data.maps_url ?? '',
     });
   }
@@ -83,6 +85,8 @@ export default function AdminEventDetail() {
       capacity: parseInt(form.capacity),
       status: form.status,
       image_url: form.image_url || null,
+      image_url_2: form.image_url_2 || null,
+      image_url_3: form.image_url_3 || null,
     };
     // Only include maps_url if column exists — set to null when blank
     if (form.maps_url !== undefined) {
@@ -203,10 +207,12 @@ export default function AdminEventDetail() {
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
             placeholder="Paste any map link…" />
         </div>
-        <ImageUpload
-          currentUrl={form.image_url}
-          onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
-        />
+        <div className="space-y-2">
+          <p className="text-xs text-gray-400">Event Photos <span className="text-gray-600">(up to 3)</span></p>
+          <ImageUpload label="Photo 1 (Cover)" currentUrl={form.image_url} onUpload={(url) => setForm(f => ({ ...f, image_url: url }))} />
+          <ImageUpload label="Photo 2" currentUrl={form.image_url_2} onUpload={(url) => setForm(f => ({ ...f, image_url_2: url }))} />
+          <ImageUpload label="Photo 3" currentUrl={form.image_url_3} onUpload={(url) => setForm(f => ({ ...f, image_url_3: url }))} />
+        </div>
         {saveMsg && (
           <p className={`text-xs rounded-lg px-3 py-2 ${saveMsgType === 'success' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>
             {saveMsg}

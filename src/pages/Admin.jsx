@@ -14,7 +14,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', maps_url: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -111,11 +111,13 @@ export default function Admin() {
       venue: form.venue.trim(),
       capacity: parseInt(form.capacity),
       image_url: form.image_url || null,
+      image_url_2: form.image_url_2 || null,
+      image_url_3: form.image_url_3 || null,
       maps_url: form.maps_url.trim() || null,
       created_by: session.user.id,
     });
     if (error) { setFormError(error.message); setFormLoading(false); return; }
-    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', maps_url: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -270,7 +272,12 @@ export default function Admin() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="Paste any map link…" />
             </div>
-            <ImageUpload currentUrl={form.image_url} onUpload={(url) => setForm(f => ({ ...f, image_url: url }))} />
+            <div className="space-y-2">
+              <p className="text-xs text-gray-400">Event Photos <span className="text-gray-600">(up to 3, first is the cover)</span></p>
+              <ImageUpload label="Photo 1 (Cover)" currentUrl={form.image_url} onUpload={(url) => setForm(f => ({ ...f, image_url: url }))} />
+              <ImageUpload label="Photo 2" currentUrl={form.image_url_2} onUpload={(url) => setForm(f => ({ ...f, image_url_2: url }))} />
+              <ImageUpload label="Photo 3" currentUrl={form.image_url_3} onUpload={(url) => setForm(f => ({ ...f, image_url_3: url }))} />
+            </div>
             {formError && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{formError}</p>}
             {formSuccess && <p className="text-green-400 text-xs bg-green-900/20 border border-green-800/40 rounded-lg px-3 py-2">{formSuccess}</p>}
             <button type="submit" disabled={formLoading}
