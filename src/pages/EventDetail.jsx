@@ -22,7 +22,11 @@ export default function EventDetail() {
 
   async function fetchEvent() {
     setLoading(true);
-    const { data: evt } = await supabase.from('events').select('*').eq('id', eventId).maybeSingle();
+    const { data: evt } = await supabase
+      .from('events')
+      .select('*, profiles!events_created_by_fkey(full_name, company_name)')
+      .eq('id', eventId)
+      .maybeSingle();
     if (!evt) { navigate('/'); return; }
     setEvent(evt);
     const { count } = await supabase.from('rsvps').select('*', { count: 'exact', head: true }).eq('event_id', eventId);
@@ -118,6 +122,22 @@ export default function EventDetail() {
 
         {event.description && (
           <p className="text-gray-300 leading-relaxed mb-5 text-sm sm:text-base">{event.description}</p>
+        )}
+
+        {/* Organiser info */}
+        {event.profiles && (
+          <div className="flex items-center gap-3 mb-5 px-3 py-3 rounded-xl bg-gray-800/50 border border-gray-800">
+            <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-sm font-bold text-white shrink-0">
+              {event.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-gray-500">Organised by</p>
+              <p className="text-sm font-semibold text-white truncate">{event.profiles.full_name}</p>
+              {event.profiles.company_name && (
+                <p className="text-xs text-brand-400 truncate">{event.profiles.company_name}</p>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Capacity bar */}

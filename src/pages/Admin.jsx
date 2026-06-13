@@ -8,10 +8,11 @@ const VIEWS = [
   { label: '📊 Analytics', short: 'Stats' },
   { label: '➕ Create', short: 'Create' },
   { label: '🗂 Events', short: 'Events' },
+  { label: '👤 Profile', short: 'Profile' },
 ];
 
 export default function Admin() {
-  const { session, profile, loading: authLoading } = useAuth();
+  const { session, profile, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [view, setView] = useState(0);
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
@@ -21,6 +22,10 @@ export default function Admin() {
   const [formLoading, setFormLoading] = useState(false);
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileMsgType, setProfileMsgType] = useState('success');
 
   useEffect(() => {
     if (authLoading) return;
@@ -28,8 +33,22 @@ export default function Admin() {
   }, [session, profile, authLoading]);
 
   useEffect(() => {
-    if (profile?.role === 'admin') { fetchStats(); fetchEvents(); }
+    if (profile?.role === 'admin') {
+      fetchStats(); fetchEvents();
+      setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' });
+    }
   }, [profile]);
+
+  async function saveProfile(e) {
+    e.preventDefault(); setProfileSaving(true); setProfileMsg('');
+    const { error } = await supabase.from('profiles').update({
+      full_name: profileForm.full_name.trim(),
+      company_name: profileForm.company_name.trim() || null,
+    }).eq('id', session.user.id);
+    if (error) { setProfileMsgType('error'); setProfileMsg(error.message); }
+    else { await refreshProfile(); setProfileMsgType('success'); setProfileMsg('✓ Profile updated!'); setTimeout(() => setProfileMsg(''), 3000); }
+    setProfileSaving(false);
+  }
 
   async function fetchStats() {
     const [{ count: activeEvents }, { count: totalUsers }, { count: totalRSVPs }] = await Promise.all([
@@ -247,6 +266,40 @@ export default function Admin() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── View 4: Organiser Profile ── */}
+      {view === 3 && (
+        <div className="max-w-md">
+          <h2 className="text-lg font-semibold text-white mb-1">Organiser Profile</h2>
+          <p className="text-xs text-gray-500 mb-5">This info is shown on event pages so attendees know who's hosting.</p>
+          <form onSubmit={saveProfile} className="space-y-4">
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Person Name *</label>
+              <input required value={profileForm.full_name} onChange={e => setProfileForm(f => ({ ...f, full_name: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="Your full name" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Company / Organisation Name <span className="text-gray-600">(optional)</span></label>
+              <input value={profileForm.company_name} onChange={e => setProfileForm(f => ({ ...f, company_name: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="e.g. Expat Stuttgart e.V." />
+            </div>
+            <div className="pt-1 pb-2 border-t border-gray-800">
+              <p className="text-xs text-gray-600 mt-2">Email: <span className="text-gray-400">{session?.user?.email}</span></p>
+            </div>
+            {profileMsg && (
+              <p className={`text-xs rounded-lg px-3 py-2 ${profileMsgType === 'success' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>
+                {profileMsg}
+              </p>
+            )}
+            <button type="submit" disabled={profileSaving}
+              className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
+              {profileSaving ? 'Saving…' : 'Save Profile'}
+            </button>
+          </form>
         </div>
       )}
     </div>
