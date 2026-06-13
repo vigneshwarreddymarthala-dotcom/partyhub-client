@@ -26,11 +26,16 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden sm:flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-3">
           {session ? (
             <>
-              <Link to="/rooms" className={`text-sm transition-colors ${pathname === '/rooms' ? 'text-white font-medium' : 'text-gray-400 hover:text-white'}`}>
-                My Rooms
+              <Link to="/my-events"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${pathname === '/my-events' ? 'bg-brand-700 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'}`}>
+                🎟️ My Events
+              </Link>
+              <Link to="/rooms"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/rooms' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                💬 Rooms
               </Link>
               <Link to="/profile">
                 <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
@@ -78,9 +83,13 @@ export default function Navbar() {
                 className="px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
                 🏠 Home
               </Link>
+              <Link to="/my-events" onClick={() => setMenuOpen(false)}
+                className="px-3 py-2.5 rounded-lg text-sm font-medium text-white bg-brand-700/50 hover:bg-brand-700 transition-colors">
+                🎟️ My Events
+              </Link>
               <Link to="/rooms" onClick={() => setMenuOpen(false)}
                 className="px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                💬 My Rooms
+                💬 Rooms
               </Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)}
                 className="px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
