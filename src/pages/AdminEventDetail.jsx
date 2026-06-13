@@ -25,7 +25,8 @@ export default function AdminEventDetail() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!session || profile?.role !== 'admin') { navigate('/admin/login'); return; }
+    const role = profile?.role;
+    if (!session || (role !== 'admin' && role !== 'sub_admin')) { navigate('/admin/login'); return; }
     fetchEvent(); fetchGuests();
   }, [eventId, authLoading, profile]);
 
@@ -41,6 +42,8 @@ export default function AdminEventDetail() {
   async function fetchEvent() {
     const { data } = await supabase.from('events').select('*').eq('id', eventId).maybeSingle();
     if (!data) { navigate('/admin/dashboard'); return; }
+    // Sub-admins can only manage their own events
+    if (profile?.role === 'sub_admin' && data.created_by !== session.user.id) { navigate('/admin/dashboard'); return; }
     setEvent(data);
     const date = new Date(data.date);
     setForm({

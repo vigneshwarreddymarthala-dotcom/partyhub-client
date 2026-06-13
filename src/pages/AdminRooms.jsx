@@ -21,7 +21,8 @@ export default function AdminRooms() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!session || profile?.role !== 'admin') { navigate('/admin/login'); return; }
+    const role = profile?.role;
+    if (!session || (role !== 'admin' && role !== 'sub_admin')) { navigate('/admin/login'); return; }
     fetchRooms();
   }, [authLoading, profile]);
 
@@ -43,12 +44,27 @@ export default function AdminRooms() {
 
   async function fetchRooms() {
     setLoading(true);
-    const { data } = await supabase
-      .from('chat_rooms')
-      .select('id, event_id, events(id, title, date, status)')
-      .order('created_at', { ascending: false });
+    let roomList = [];
 
-    const roomList = data ?? [];
+    if (profile?.role === 'sub_admin') {
+      // Sub-admin: only rooms belonging to their events
+      const { data: myEvents } = await supabase.from('events').select('id').eq('created_by', session.user.id);
+      const ids = (myEvents ?? []).map(e => e.id);
+      if (ids.length > 0) {
+        const { data } = await supabase
+          .from('chat_rooms')
+          .select('id, event_id, events(id, title, date, status)')
+          .in('event_id', ids)
+          .order('created_at', { ascending: false });
+        roomList = data ?? [];
+      }
+    } else {
+      const { data } = await supabase
+        .from('chat_rooms')
+        .select('id, event_id, events(id, title, date, status)')
+        .order('created_at', { ascending: false });
+      roomList = data ?? [];
+    }
     setRooms(roomList);
 
     // Auto-select: either the preselected room from query param, or first room
