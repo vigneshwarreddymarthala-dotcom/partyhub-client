@@ -12,7 +12,8 @@ export default function AdminEventDetail() {
   const [event, setEvent] = useState(null);
   const [form, setForm] = useState({
     title: '', description: '', date: '', time: '',
-    venue: '', capacity: '', status: 'active', image_url: '', maps_url: '',
+    venue: '', capacity: '', status: 'active', image_url: '', maps_url: '', recurrence: 'none',
+    publish_date: '', publish_time: '',
   });
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -58,6 +59,9 @@ export default function AdminEventDetail() {
       image_url_2: data.image_url_2 ?? '',
       image_url_3: data.image_url_3 ?? '',
       maps_url: data.maps_url ?? '',
+      recurrence: data.recurrence ?? 'none',
+      publish_date: data.scheduled_at ? new Date(data.scheduled_at).toISOString().split('T')[0] : '',
+      publish_time: data.scheduled_at ? new Date(data.scheduled_at).toTimeString().slice(0, 5) : '',
     });
   }
 
@@ -87,6 +91,10 @@ export default function AdminEventDetail() {
       image_url: form.image_url || null,
       image_url_2: form.image_url_2 || null,
       image_url_3: form.image_url_3 || null,
+      recurrence: form.recurrence,
+      scheduled_at: form.status === 'scheduled' && form.publish_date && form.publish_time
+        ? new Date(`${form.publish_date}T${form.publish_time}`).toISOString()
+        : null,
     };
     // Only include maps_url if column exists — set to null when blank
     if (form.maps_url !== undefined) {
@@ -196,16 +204,43 @@ export default function AdminEventDetail() {
             <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
               <option value="active">Active</option>
+              <option value="scheduled">Scheduled</option>
               <option value="ended">Ended</option>
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
         </div>
+        {form.status === 'scheduled' && (
+          <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-yellow-900/10 border border-yellow-800/30">
+            <div>
+              <label className="block text-xs text-yellow-400 mb-1">🕐 Publish Date</label>
+              <input required type="date" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" />
+            </div>
+            <div>
+              <label className="block text-xs text-yellow-400 mb-1">Publish Time</label>
+              <input required type="time" value={form.publish_time} onChange={e => setForm(f => ({ ...f, publish_time: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500" />
+            </div>
+          </div>
+        )}
         <div>
           <label className="block text-xs text-gray-400 mb-1">Google Maps Link <span className="text-gray-600">(optional)</span></label>
           <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
             placeholder="Paste any map link…" />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Recurrence <span className="text-gray-600">(auto-reposts after event ends)</span></label>
+          <select value={form.recurrence} onChange={e => setForm(f => ({ ...f, recurrence: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+            <option value="none">One-time event</option>
+            <option value="hourly_1">Every 1 hour</option>
+            <option value="hourly_2">Every 2 hours</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
         </div>
         <div className="space-y-2">
           <p className="text-xs text-gray-400">Event Photos <span className="text-gray-600">(up to 3)</span></p>

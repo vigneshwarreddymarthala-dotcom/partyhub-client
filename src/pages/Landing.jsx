@@ -13,7 +13,10 @@ export default function Landing() {
 
   async function fetchEvents() {
     setLoading(true);
-    let query = supabase.from('events').select('*').order('date', { ascending: true });
+    // Publish any scheduled events whose time has arrived (runs in DB, no server needed)
+    await supabase.rpc('publish_due_scheduled_events');
+    let query = supabase.from('events').select('*').order('date', { ascending: true })
+      .neq('status', 'scheduled'); // never show scheduled events to the public
     if (filter === 'active') query = query.eq('status', 'active');
     const { data } = await query;
     if (!data) { setLoading(false); return; }

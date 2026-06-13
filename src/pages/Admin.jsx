@@ -14,7 +14,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -30,9 +30,11 @@ export default function Admin() {
   // Team (main admin only)
   const [subAdmins, setSubAdmins] = useState([]);
   const [subAdminsLoading, setSubAdminsLoading] = useState(false);
-  const [inviteLink, setInviteLink] = useState('');
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [inviteEmail, setInviteEmail] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
+  const [inviteMsgType, setInviteMsgType] = useState('success');
 
   const VIEWS = [
     { label: '📊 Analytics', short: 'Stats' },
@@ -44,7 +46,9 @@ export default function Admin() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!session || (!isMainAdmin && !isSubAdmin)) navigate('/admin/login');
+    if (!session) { navigate('/admin/login'); return; }
+    if (!profile) return; // profile still loading — wait
+    if (!isMainAdmin && !isSubAdmin) navigate('/admin/sub-admin');
   }, [session, profile, authLoading]);
 
   useEffect(() => {
@@ -53,9 +57,9 @@ export default function Admin() {
     setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' });
   }, [profile]);
 
-  // Load sub-admins when Team tab is opened
+  // Load team data when Team tab is opened
   useEffect(() => {
-    if (view === 4 && isMainAdmin && subAdmins.length === 0) fetchSubAdmins();
+    if (view === 4 && isMainAdmin) { fetchSubAdmins(); fetchPendingInvites(); }
   }, [view]);
 
   // ── Data fetching ───────────────────────────────────────────────
@@ -98,6 +102,49 @@ export default function Admin() {
     setSubAdminsLoading(false);
   }
 
+  async function fetchPendingInvites() {
+    const { data } = await supabase.from('admin_invites')
+      .select('id, invited_email, created_at')
+      .eq('parent_admin_id', session.user.id)
+      .eq('used', false)
+      .not('invited_email', 'is', null)
+      .order('created_at', { ascending: false });
+    setPendingInvites(data ?? []);
+  }
+
+  async function sendInvite(e) {
+    e.preventDefault();
+    const email = inviteEmail.trim().toLowerCase();
+    if (!email) return;
+    setInviteLoading(true); setInviteMsg('');
+
+    if (pendingInvites.some(i => i.invited_email === email)) {
+      setInviteMsgType('error'); setInviteMsg('This email is already in the list.');
+      setInviteLoading(false); return;
+    }
+
+    // Try to persist — falls back to local state if column not yet added
+    const { error } = await supabase.from('admin_invites')
+      .insert({ parent_admin_id: session.user.id, invited_email: email });
+
+    if (!error || error?.message?.includes('invited_email') || error?.message?.includes('column')) {
+      // Add to local list so the admin can see it even if not persisted
+      setPendingInvites(prev => [{ id: Date.now(), invited_email: email, created_at: new Date().toISOString() }, ...prev]);
+      setInviteEmail('');
+      setInviteMsgType('success');
+      setInviteMsg(`✓ ${email} added.`);
+      setTimeout(() => setInviteMsg(''), 3000);
+    } else {
+      setInviteMsgType('error'); setInviteMsg(error.message);
+    }
+    setInviteLoading(false);
+  }
+
+  async function cancelInvite(id) {
+    await supabase.from('admin_invites').delete().eq('id', id);
+    setPendingInvites(prev => prev.filter(i => i.id !== id));
+  }
+
   // ── Actions ─────────────────────────────────────────────────────
 
   async function handleCreateEvent(e) {
@@ -105,6 +152,7 @@ export default function Admin() {
     setFormError(''); setFormSuccess(''); setFormLoading(true);
     const datetime = new Date(`${form.date}T${form.time}`).toISOString();
 
+    const isScheduled = form.is_scheduled && form.publish_date && form.publish_time;
     const base = {
       title: form.title.trim(),
       description: form.description.trim() || null,
@@ -113,9 +161,10 @@ export default function Admin() {
       capacity: parseInt(form.capacity),
       image_url: form.image_url || null,
       created_by: session.user.id,
+      ...(isScheduled && { status: 'scheduled', scheduled_at: new Date(`${form.publish_date}T${form.publish_time}`).toISOString() }),
     };
     // Include optional columns only if they exist in the schema
-    const full = { ...base, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null };
+    const full = { ...base, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, recurrence: form.recurrence };
 
     let { error } = await supabase.from('events').insert(full);
 
@@ -126,7 +175,7 @@ export default function Admin() {
     }
 
     if (error) { setFormError(error.message); setFormLoading(false); return; }
-    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -253,12 +302,12 @@ export default function Admin() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Date *</label>
+                <label className="block text-xs text-gray-400 mb-1">Event Date * <span className="text-gray-600">(when the party happens)</span></label>
                 <input required type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Time *</label>
+                <label className="block text-xs text-gray-400 mb-1">Event Time *</label>
                 <input required type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
                   className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500" />
               </div>
@@ -280,6 +329,48 @@ export default function Admin() {
               <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="Paste any map link…" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Recurrence <span className="text-gray-600">(auto-reposts after event ends)</span></label>
+              <select value={form.recurrence} onChange={e => setForm(f => ({ ...f, recurrence: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
+                <option value="none">One-time event</option>
+                <option value="hourly_1">Every 1 hour</option>
+                <option value="hourly_2">Every 2 hours</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+            {/* Schedule toggle */}
+            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-3 space-y-3">
+              <button type="button" onClick={() => setForm(f => ({ ...f, is_scheduled: !f.is_scheduled }))}
+                className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🕐</span>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-white">Schedule Post</p>
+                    <p className="text-xs text-gray-500">Choose when this post becomes visible — must be before the event date</p>
+                  </div>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-colors relative ${form.is_scheduled ? 'bg-brand-600' : 'bg-gray-700'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${form.is_scheduled ? 'left-5' : 'left-0.5'}`} />
+                </div>
+              </button>
+              {form.is_scheduled && (
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-800">
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Publish Date *</label>
+                    <input required type="date" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-400 mb-1">Publish Time *</label>
+                    <input required type="time" value={form.publish_time} onChange={e => setForm(f => ({ ...f, publish_time: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <p className="text-xs text-gray-400">Event Photos <span className="text-gray-600">(up to 3, first is the cover)</span></p>
@@ -325,9 +416,19 @@ export default function Admin() {
                         <span className="text-gray-700">·</span>
                         <span className="text-xs text-gray-500 truncate max-w-[140px]">{ev.venue}</span>
                         <span className="text-gray-700">·</span>
-                        <span className={`text-xs font-medium ${ev.status === 'active' ? 'text-green-400' : 'text-gray-500'}`}>{ev.status}</span>
+                        <span className={`text-xs font-medium ${ev.status === 'active' ? 'text-green-400' : ev.status === 'scheduled' ? 'text-yellow-400' : 'text-gray-500'}`}>
+                          {ev.status === 'scheduled' && ev.scheduled_at
+                            ? `🕐 ${new Date(ev.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+                            : ev.status}
+                        </span>
                         <span className="text-gray-700">·</span>
                         <span className="text-xs text-brand-400 font-medium">👥 {rsvpCount} / {ev.capacity}</span>
+                        {ev.recurrence && ev.recurrence !== 'none' && (
+                          <>
+                            <span className="text-gray-700">·</span>
+                            <span className="text-xs text-purple-400 font-medium">🔁 {{ hourly_1: 'Every 1h', hourly_2: 'Every 2h', daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[ev.recurrence] ?? ev.recurrence}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
@@ -391,61 +492,87 @@ export default function Admin() {
 
       {/* ── View 4: Team (main admin only) ── */}
       {view === 4 && isMainAdmin && (
-        <div className="max-w-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-            <div>
-              <h2 className="text-lg font-semibold text-white">Team</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Invite people to manage events on your behalf</p>
-            </div>
-            <button onClick={generateInvite} disabled={inviteLoading}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-medium text-white transition-colors disabled:opacity-60 shrink-0">
-              {inviteLoading ? 'Generating…' : '+ Generate Invite Link'}
-            </button>
+        <div className="max-w-2xl space-y-6">
+
+          {/* Add allowed email */}
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-5">
+            <h2 className="text-sm font-semibold text-white mb-1">Add Sub-Admin Email</h2>
+            <p className="text-xs text-gray-500 mb-4">Only emails added here can create a sub-admin account.</p>
+            <form onSubmit={sendInvite} className="flex gap-2">
+              <input
+                required type="email" value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="hello@gmail.com"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+              />
+              <button type="submit" disabled={inviteLoading}
+                className="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-medium text-white transition-colors disabled:opacity-60 shrink-0">
+                {inviteLoading ? '…' : 'Add'}
+              </button>
+            </form>
+            {inviteMsg && (
+              <p className={`mt-3 text-xs rounded-lg px-3 py-2 ${inviteMsgType === 'success' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>
+                {inviteMsg}
+              </p>
+            )}
           </div>
 
-          {/* Generated invite link */}
-          {inviteLink && (
-            <div className="mb-6 p-4 rounded-xl bg-green-900/20 border border-green-800/40">
-              <p className="text-xs text-green-400 font-medium mb-2">{inviteCopied ? '✓ Copied to clipboard!' : 'Share this link with the new sub-admin:'}</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs text-gray-300 bg-gray-800 px-3 py-2 rounded-lg truncate">{inviteLink}</code>
-                <button onClick={() => { navigator.clipboard.writeText(inviteLink); setInviteCopied(true); setTimeout(() => setInviteCopied(false), 2500); }}
-                  className="shrink-0 text-xs px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors">
-                  Copy
-                </button>
+          {/* Allowed emails not yet registered */}
+          {pendingInvites.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Allowed Emails</h3>
+              <div className="space-y-2">
+                {pendingInvites.map(inv => (
+                  <div key={inv.id} className="flex items-center gap-3 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-sm shrink-0">
+                      {inv.invited_email?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-white truncate">{inv.invited_email}</p>
+                      <p className="text-xs text-gray-600">Not yet registered</p>
+                    </div>
+                    <button onClick={() => cancelInvite(inv.id)}
+                      className="text-xs text-red-400 hover:text-red-300 transition-colors shrink-0">
+                      Remove
+                    </button>
+                  </div>
+                ))}
               </div>
-              <p className="text-xs text-gray-600 mt-2">Single-use link — expires after one registration.</p>
             </div>
           )}
 
-          {/* Sub-admins list */}
-          {subAdminsLoading ? (
-            <div className="space-y-3">{[...Array(2)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-800 animate-pulse" />)}</div>
-          ) : subAdmins.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-gray-800 rounded-2xl">
-              <p className="text-3xl mb-2">👥</p>
-              <p className="text-gray-500 text-sm">No sub-admins yet.</p>
-              <p className="text-gray-600 text-xs mt-1">Generate an invite link to add team members.</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {subAdmins.map(sa => (
-                <button key={sa.id} onClick={() => navigate(`/admin/sub-admin/${sa.id}`)}
-                  className="w-full bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-xl px-4 py-3.5 flex items-center gap-3 transition-colors text-left">
-                  <div className="w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center text-sm font-bold text-white shrink-0">
-                    {sa.full_name?.[0]?.toUpperCase() ?? '?'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-white truncate">{sa.full_name}</p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {sa.company_name ? `${sa.company_name} · ` : ''}@{sa.username}
-                    </p>
-                  </div>
-                  <span className="text-gray-600 text-sm shrink-0">→</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Registered sub-admins */}
+          <div>
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Team Members</h3>
+            {subAdminsLoading ? (
+              <div className="space-y-3">{[...Array(2)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-800 animate-pulse" />)}</div>
+            ) : subAdmins.length === 0 ? (
+              <div className="text-center py-10 border border-dashed border-gray-800 rounded-2xl">
+                <p className="text-3xl mb-2">👥</p>
+                <p className="text-gray-500 text-sm">No team members yet.</p>
+                <p className="text-gray-600 text-xs mt-1">Add their email above so they can register.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {subAdmins.map(sa => (
+                  <button key={sa.id} onClick={() => navigate(`/admin/sub-admin/${sa.id}`)}
+                    className="w-full bg-gray-900 border border-gray-800 hover:border-gray-600 rounded-xl px-4 py-3.5 flex items-center gap-3 transition-colors text-left">
+                    <div className="w-10 h-10 rounded-full bg-purple-800 flex items-center justify-center text-sm font-bold text-white shrink-0">
+                      {sa.full_name?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white truncate">{sa.full_name}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {sa.company_name ? `${sa.company_name} · ` : ''}@{sa.username}
+                      </p>
+                    </div>
+                    <span className="text-gray-600 text-sm shrink-0">→</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
       )}
     </div>

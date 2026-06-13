@@ -6,13 +6,13 @@ import { useAuth } from '../context/AuthContext';
 export default function AdminLogin() {
   const { session, profile, loading } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState('login'); // 'login' | 'register'
+  const [tab, setTab] = useState('signin'); // 'signin' | 'create-admin'
 
   // Sign in fields
-  const [email, setEmail] = useState('test@gmail.com');
-  const [password, setPassword] = useState('1234567');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-  // Register fields
+  // Create main-admin fields
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regName, setRegName] = useState('');
@@ -22,12 +22,11 @@ export default function AdminLogin() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && session && profile?.role === 'admin') {
-      navigate('/admin/dashboard');
-    }
+    if (!loading && session && profile?.role === 'admin') navigate('/admin/dashboard');
+    // Sub-admins trying to access this page get redirected to their own portal
+    if (!loading && session && profile?.role === 'sub_admin') navigate('/admin/sub-admin');
   }, [session, profile, loading]);
 
-  // ── Sign In ──────────────────────────────────────────────────
   async function handleLogin(e) {
     e.preventDefault();
     setError(''); setSubmitting(true);
@@ -38,41 +37,33 @@ export default function AdminLogin() {
     const { data: prof } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
     if (prof?.role !== 'admin') {
       await supabase.auth.signOut();
-      setError('Access denied. This portal is for administrators only.');
+      setError('This portal is for main admins only. Sub-admins sign in at /admin/sub-admin');
       setSubmitting(false); return;
     }
     navigate('/admin/dashboard');
   }
 
-  // ── Register ─────────────────────────────────────────────────
-  async function handleRegister(e) {
+  async function handleCreateAdmin(e) {
     e.preventDefault();
     setError(''); setSubmitting(true);
 
-    // Create auth user
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: regEmail, password: regPassword,
-    });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email: regEmail, password: regPassword });
     if (signUpError) { setError(signUpError.message); setSubmitting(false); return; }
-
     if (!data.session) {
-      setError('Email confirmation is still on. Please disable it in Supabase → Auth → Providers → Email.');
+      setError('Email confirmation is on — disable it in Supabase → Auth → Providers → Email.');
       setSubmitting(false); return;
     }
 
-    // Create admin profile
     const { error: profileError } = await supabase.from('profiles').insert({
       id: data.user.id,
       full_name: regName.trim(),
       username: regUsername.trim(),
       role: 'admin',
     });
-
     if (profileError) {
       setError(profileError.message.includes('unique') ? 'Username already taken.' : profileError.message);
       setSubmitting(false); return;
     }
-
     navigate('/admin/dashboard');
   }
 
@@ -93,79 +84,82 @@ export default function AdminLogin() {
           <p className="text-gray-500 text-sm mt-1">PartyHub — restricted access</p>
         </div>
 
-        {/* Tab toggle */}
-        <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-xl p-1 mb-5">
-          <button
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'login' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}
-          >
-            Sign In
+        {/* ── Sign In (admin + sub-admin) ── */}
+        <form onSubmit={handleLogin} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4 mb-4">
+          <h2 className="text-sm font-semibold text-white">Sign In</h2>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Email</label>
+            <input type="email" required autoFocus value={email} onChange={e => setEmail(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+              placeholder="you@example.com" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Password</label>
+            <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+              placeholder="••••••••" />
+          </div>
+          {error && tab === 'signin' && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
+          <button type="submit" disabled={submitting} onClick={() => setTab('signin')}
+            className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
+            {submitting && tab === 'signin' ? 'Signing in…' : 'Sign In'}
           </button>
-          <button
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${mode === 'register' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}
-          >
-            Create Account
-          </button>
+        </form>
+
+        {/* ── Sub-Admin redirect notice ── */}
+        <div className="bg-gray-900/60 border border-gray-800 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-white">Sub-Admin?</p>
+            <p className="text-xs text-gray-500 mt-0.5">Use the dedicated sub-admin portal</p>
+          </div>
+          <Link to="/admin/sub-admin"
+            className="shrink-0 px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-sm font-medium text-white transition-colors">
+            Sub-Admin Portal
+          </Link>
         </div>
 
-        {/* ── Login form ── */}
-        {mode === 'login' && (
-          <form onSubmit={handleLogin} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Email</label>
-              <input type="email" required autoFocus value={email} onChange={e => setEmail(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="admin@example.com" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Password</label>
-              <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="••••••••" />
-            </div>
-            {error && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
-            <button type="submit" disabled={submitting}
-              className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
-              {submitting ? 'Signing in…' : 'Sign in to Admin'}
-            </button>
-          </form>
-        )}
-
-        {/* ── Register form ── */}
-        {mode === 'register' && (
-          <form onSubmit={handleRegister} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Full Name *</label>
-              <input required value={regName} onChange={e => setRegName(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="Jane Doe" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Username *</label>
-              <input required value={regUsername} onChange={e => setRegUsername(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="janedoe" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Email *</label>
-              <input type="email" required value={regEmail} onChange={e => setRegEmail(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="admin@example.com" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Password *</label>
-              <input type="password" required minLength={6} value={regPassword} onChange={e => setRegPassword(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
-                placeholder="Min. 6 characters" />
-            </div>
-            {error && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
-            <button type="submit" disabled={submitting}
-              className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
-              {submitting ? 'Creating account…' : 'Create Admin Account'}
-            </button>
-          </form>
-        )}
+        {/* ── Create main admin (collapsible) ── */}
+        <div className="border border-gray-800 rounded-2xl overflow-hidden">
+          <button
+            onClick={() => { setTab(tab === 'create-admin' ? 'signin' : 'create-admin'); setError(''); }}
+            className="w-full flex items-center justify-between px-4 py-3 text-xs text-gray-500 hover:text-gray-400 transition-colors">
+            <span>First time? Create main admin account</span>
+            <span>{tab === 'create-admin' ? '▲' : '▼'}</span>
+          </button>
+          {tab === 'create-admin' && (
+            <form onSubmit={handleCreateAdmin} className="px-4 pb-4 space-y-3 border-t border-gray-800 pt-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Full Name *</label>
+                <input required value={regName} onChange={e => setRegName(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+                  placeholder="Jane Doe" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Username *</label>
+                <input required value={regUsername} onChange={e => setRegUsername(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+                  placeholder="janedoe" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Email *</label>
+                <input type="email" required value={regEmail} onChange={e => setRegEmail(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+                  placeholder="admin@example.com" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Password *</label>
+                <input type="password" required minLength={6} value={regPassword} onChange={e => setRegPassword(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-500"
+                  placeholder="Min. 6 characters" />
+              </div>
+              {error && tab === 'create-admin' && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
+              <button type="submit" disabled={submitting}
+                className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
+                {submitting && tab === 'create-admin' ? 'Creating…' : 'Create Admin Account'}
+              </button>
+            </form>
+          )}
+        </div>
 
         <p className="text-center text-xs text-gray-700 mt-6">
           <Link to="/" className="text-gray-500 hover:text-gray-400 transition-colors">← Back to PartyHub</Link>

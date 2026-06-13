@@ -68,7 +68,8 @@ export default function EventDetail() {
   );
 
   const isFull = rsvpCount >= event.capacity;
-  const isEnded = event.status !== 'active';
+  const isEnded = event.status === 'ended' || event.status === 'cancelled';
+  const isScheduled = event.status === 'scheduled';
   const date = new Date(event.date);
   const mapsHref = event.maps_url
     ? /^https?:\/\//i.test(event.maps_url) ? event.maps_url : `https://${event.maps_url}`
@@ -91,6 +92,14 @@ export default function EventDetail() {
           {isEnded && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-30">
               <span className="px-4 py-2 rounded-full bg-gray-800 text-gray-300 font-medium text-sm">Event Ended</span>
+            </div>
+          )}
+          {isScheduled && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-30 gap-2">
+              <span className="text-2xl">🕐</span>
+              <span className="px-4 py-2 rounded-full bg-yellow-900/80 text-yellow-300 font-medium text-sm">
+                Going live {event.scheduled_at ? new Date(event.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'soon'}
+              </span>
             </div>
           )}
         </div>
@@ -122,6 +131,14 @@ export default function EventDetail() {
             <span>👥</span>
             <span>{rsvpCount} / {event.capacity} going</span>
           </div>
+          {event.recurrence && event.recurrence !== 'none' && (
+            <div className="flex items-center gap-2">
+              <span>🔁</span>
+              <span className="text-purple-400 font-medium">
+                {{'hourly_1': 'Repeats every hour', 'hourly_2': 'Repeats every 2 hours', 'daily': 'Repeats daily', 'weekly': 'Repeats weekly', 'monthly': 'Repeats monthly'}[event.recurrence] ?? `Repeats ${event.recurrence}`}
+              </span>
+            </div>
+          )}
         </div>
 
         {event.description && (
@@ -166,7 +183,11 @@ export default function EventDetail() {
 
         {/* Action buttons — full width on mobile */}
         <div className="flex flex-col sm:flex-row gap-3">
-          {isEnded ? (
+          {isScheduled ? (
+            <span className="w-full text-center px-5 py-3 rounded-xl bg-yellow-900/30 text-yellow-400 text-sm font-medium border border-yellow-800/40">
+              🕐 Not live yet — check back later
+            </span>
+          ) : isEnded ? (
             <span className="w-full text-center px-5 py-3 rounded-xl bg-gray-800 text-gray-500 text-sm font-medium">
               Event has ended
             </span>
