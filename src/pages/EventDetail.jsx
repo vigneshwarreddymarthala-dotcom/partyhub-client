@@ -65,6 +65,9 @@ export default function EventDetail() {
   const isFull = rsvpCount >= event.capacity;
   const isEnded = event.status !== 'active';
   const date = new Date(event.date);
+  const mapsHref = event.maps_url
+    ? /^https?:\/\//i.test(event.maps_url) ? event.maps_url : `https://${event.maps_url}`
+    : null;
 
   return (
     <>
@@ -98,8 +101,8 @@ export default function EventDetail() {
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0">📍</span>
-            {event.maps_url ? (
-              <a href={event.maps_url} target="_blank" rel="noopener noreferrer"
+            {mapsHref ? (
+              <a href={mapsHref} target="_blank" rel="noopener noreferrer"
                 className="text-brand-400 hover:text-brand-300 hover:underline transition-colors">
                 {event.venue} ↗
               </a>
@@ -130,8 +133,8 @@ export default function EventDetail() {
         {error && <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2 mb-4">{error}</p>}
 
         {/* Maps button */}
-        {event.maps_url && (
-          <a href={event.maps_url} target="_blank" rel="noopener noreferrer"
+        {mapsHref && (
+          <a href={mapsHref} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-gray-700 hover:border-brand-600 text-sm text-gray-300 hover:text-white transition-colors mb-4">
             🗺️ Open in Maps
           </a>

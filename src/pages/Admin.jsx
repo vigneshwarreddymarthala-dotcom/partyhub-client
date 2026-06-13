@@ -170,10 +170,10 @@ export default function Admin() {
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Google Maps Link</label>
-              <input type="url" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
+              <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="https://maps.google.com/?q=..." />
-              <p className="text-xs text-gray-600 mt-1">Paste a Google Maps or any map URL</p>
+                placeholder="Paste any map link…" />
+              <p className="text-xs text-gray-600 mt-1">Google Maps, short links, Apple Maps — any URL works</p>
             </div>
             <ImageUpload
               currentUrl={form.image_url}

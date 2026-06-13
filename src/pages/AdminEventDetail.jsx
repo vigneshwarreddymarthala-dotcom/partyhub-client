@@ -174,9 +174,9 @@ export default function AdminEventDetail() {
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1">Google Maps Link</label>
-          <input type="url" value={form.maps_url ?? ''} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
+          <input type="text" value={form.maps_url ?? ''} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
-            placeholder="https://maps.google.com/?q=..." />
+            placeholder="Paste any map link…" />
         </div>
         <ImageUpload
           currentUrl={form.image_url}
