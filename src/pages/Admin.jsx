@@ -42,7 +42,10 @@ export default function Admin() {
 
   async function fetchEvents() {
     setEventsLoading(true);
-    const { data } = await supabase.from('events').select('*').order('date', { ascending: false });
+    const { data } = await supabase
+      .from('events')
+      .select('*, rsvps(id), chat_rooms(id)')
+      .order('date', { ascending: false });
     setEvents(data ?? []);
     setEventsLoading(false);
   }
@@ -201,29 +204,47 @@ export default function Admin() {
             <p className="text-gray-500 text-sm">No events yet.</p>
           ) : (
             <div className="space-y-3">
-              {events.map((ev) => (
-                <div key={ev.id} className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-white text-sm truncate">{ev.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      {' · '}{ev.venue}
-                      {' · '}
-                      <span className={ev.status === 'active' ? 'text-green-400' : 'text-gray-500'}>{ev.status}</span>
-                    </p>
+              {events.map((ev) => {
+                const rsvpCount = ev.rsvps?.length ?? 0;
+                const roomId = ev.chat_rooms?.[0]?.id;
+                return (
+                  <div key={ev.id} className="bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-white text-sm truncate">{ev.title}</p>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                        <span className="text-xs text-gray-500">
+                          {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                        <span className="text-gray-700">·</span>
+                        <span className="text-xs text-gray-500 truncate max-w-[140px]">{ev.venue}</span>
+                        <span className="text-gray-700">·</span>
+                        <span className={`text-xs font-medium ${ev.status === 'active' ? 'text-green-400' : 'text-gray-500'}`}>{ev.status}</span>
+                        <span className="text-gray-700">·</span>
+                        <span className="text-xs text-brand-400 font-medium">👥 {rsvpCount} / {ev.capacity}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      {roomId && (
+                        <button
+                          onClick={() => navigate(`/admin/rooms?room=${roomId}`)}
+                          className="flex items-center justify-center w-9 h-9 rounded-lg bg-brand-900/50 hover:bg-brand-800/60 text-brand-400 transition-colors"
+                          title="Open chat room"
+                        >
+                          💬
+                        </button>
+                      )}
+                      <Link to={`/admin/event/${ev.id}`}
+                        className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors">
+                        Manage
+                      </Link>
+                      <button onClick={() => deleteEvent(ev.id)}
+                        className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-red-900/30 hover:bg-red-900/60 text-xs text-red-400 transition-colors">
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Link to={`/admin/event/${ev.id}`}
-                      className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors">
-                      Manage
-                    </Link>
-                    <button onClick={() => deleteEvent(ev.id)}
-                      className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-red-900/30 hover:bg-red-900/60 text-xs text-red-400 transition-colors">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
