@@ -104,18 +104,27 @@ export default function Admin() {
     e.preventDefault();
     setFormError(''); setFormSuccess(''); setFormLoading(true);
     const datetime = new Date(`${form.date}T${form.time}`).toISOString();
-    const { error } = await supabase.from('events').insert({
+
+    const base = {
       title: form.title.trim(),
       description: form.description.trim() || null,
       date: datetime,
       venue: form.venue.trim(),
       capacity: parseInt(form.capacity),
       image_url: form.image_url || null,
-      image_url_2: form.image_url_2 || null,
-      image_url_3: form.image_url_3 || null,
-      maps_url: form.maps_url.trim() || null,
       created_by: session.user.id,
-    });
+    };
+    // Include optional columns only if they exist in the schema
+    const full = { ...base, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null };
+
+    let { error } = await supabase.from('events').insert(full);
+
+    // Retry with base columns only if optional columns are missing
+    if (error?.message?.includes('column') || error?.code === '42703') {
+      const { error: e2 } = await supabase.from('events').insert(base);
+      error = e2;
+    }
+
     if (error) { setFormError(error.message); setFormLoading(false); return; }
     setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
