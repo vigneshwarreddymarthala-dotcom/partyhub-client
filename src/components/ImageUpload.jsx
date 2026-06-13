@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function ImageUpload({ currentUrl, onUpload }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl || null);
+
+  // Sync preview when parent re-fetches the event (e.g. after save)
+  useEffect(() => {
+    setPreview(currentUrl || null);
+  }, [currentUrl]);
 
   async function handleFile(e) {
     const file = e.target.files?.[0];

@@ -53,10 +53,21 @@ export default function AdminEventDetail() {
   async function saveEvent(e) {
     e.preventDefault(); setSaving(true); setSaveMsg('');
     const datetime = new Date(`${form.date}T${form.time}`).toISOString();
-    const { error } = await supabase.from('events').update({ title: form.title.trim(), description: form.description.trim() || null, date: datetime, venue: form.venue.trim(), capacity: parseInt(form.capacity), status: form.status, image_url: form.image_url || null, maps_url: form.maps_url?.trim() || null }).eq('id', eventId);
-    setSaveMsg(error ? error.message : 'Saved!');
+    const { error } = await supabase.from('events').update({
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      date: datetime,
+      venue: form.venue.trim(),
+      capacity: parseInt(form.capacity),
+      status: form.status,
+      image_url: form.image_url || null,
+      maps_url: form.maps_url?.trim() || null,
+    }).eq('id', eventId);
+    if (error) { setSaveMsg(error.message); setSaving(false); return; }
+    await fetchEvent(); // re-fetch first so form + image preview sync
+    setSaveMsg('✓ Changes saved!');
     setSaving(false);
-    if (!error) fetchEvent();
+    setTimeout(() => setSaveMsg(''), 3000);
   }
 
   async function toggleCheckIn(rsvpId, current) {

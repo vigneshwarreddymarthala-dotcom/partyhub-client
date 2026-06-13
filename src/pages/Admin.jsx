@@ -62,9 +62,11 @@ export default function Admin() {
       created_by: session.user.id,
     });
     if (error) { setFormError(error.message); setFormLoading(false); return; }
-    setFormSuccess('Event created!');
     setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', maps_url: '' });
-    fetchStats(); fetchEvents(); setFormLoading(false);
+    await Promise.all([fetchStats(), fetchEvents()]);
+    setFormSuccess('✓ Event created!');
+    setFormLoading(false);
+    setTimeout(() => setFormSuccess(''), 3000);
   }
 
   async function deleteEvent(id) {
