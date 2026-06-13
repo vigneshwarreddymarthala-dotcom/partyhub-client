@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useUnread } from '../context/UnreadContext';
 import { supabase } from '../lib/supabase';
 
 export default function Navbar() {
   const { session, profile } = useAuth();
+  const { totalUnread } = useUnread();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,8 +36,13 @@ export default function Navbar() {
                 🎟️ My Events
               </Link>
               <Link to="/rooms"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/rooms' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${pathname === '/rooms' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`}>
                 💬 Rooms
+                {totalUnread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none">
+                    {totalUnread > 9 ? '9+' : totalUnread}
+                  </span>
+                )}
               </Link>
               <Link to="/profile">
                 <div className="w-8 h-8 rounded-full bg-brand-700 flex items-center justify-center text-sm font-semibold text-white hover:bg-brand-600 transition-colors">
@@ -88,8 +95,13 @@ export default function Navbar() {
                 🎟️ My Events
               </Link>
               <Link to="/rooms" onClick={() => setMenuOpen(false)}
-                className="px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
-                💬 Rooms
+                className="relative px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors flex items-center justify-between">
+                <span>💬 Rooms</span>
+                {totalUnread > 0 && (
+                  <span className="min-w-[20px] h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center px-1.5">
+                    {totalUnread > 9 ? '9+' : totalUnread}
+                  </span>
+                )}
               </Link>
               <Link to="/profile" onClick={() => setMenuOpen(false)}
                 className="px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">

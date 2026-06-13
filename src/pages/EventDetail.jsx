@@ -98,7 +98,14 @@ export default function EventDetail() {
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0">📍</span>
-            <span>{event.venue}</span>
+            {event.maps_url ? (
+              <a href={event.maps_url} target="_blank" rel="noopener noreferrer"
+                className="text-brand-400 hover:text-brand-300 hover:underline transition-colors">
+                {event.venue} ↗
+              </a>
+            ) : (
+              <span>{event.venue}</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <span>👥</span>
@@ -121,6 +128,14 @@ export default function EventDetail() {
         </div>
 
         {error && <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2 mb-4">{error}</p>}
+
+        {/* Maps button */}
+        {event.maps_url && (
+          <a href={event.maps_url} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-gray-700 hover:border-brand-600 text-sm text-gray-300 hover:text-white transition-colors mb-4">
+            🗺️ Open in Maps
+          </a>
+        )}
 
         {/* Action buttons — full width on mobile */}
         <div className="flex flex-col sm:flex-row gap-3">

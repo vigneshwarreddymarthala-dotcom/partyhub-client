@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import ImageUpload from '../components/ImageUpload';
 
 const VIEWS = [
   { label: '📊 Analytics', short: 'Stats' },
@@ -14,7 +15,7 @@ export default function Admin() {
   const navigate = useNavigate();
   const [view, setView] = useState(0);
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', maps_url: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -51,12 +52,18 @@ export default function Admin() {
     setFormError(''); setFormSuccess(''); setFormLoading(true);
     const datetime = new Date(`${form.date}T${form.time}`).toISOString();
     const { error } = await supabase.from('events').insert({
-      title: form.title.trim(), description: form.description.trim() || null,
-      date: datetime, venue: form.venue.trim(), capacity: parseInt(form.capacity), created_by: session.user.id,
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      date: datetime,
+      venue: form.venue.trim(),
+      capacity: parseInt(form.capacity),
+      image_url: form.image_url || null,
+      maps_url: form.maps_url.trim() || null,
+      created_by: session.user.id,
     });
     if (error) { setFormError(error.message); setFormLoading(false); return; }
     setFormSuccess('Event created!');
-    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', maps_url: '' });
     fetchStats(); fetchEvents(); setFormLoading(false);
   }
 
@@ -161,6 +168,17 @@ export default function Admin() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="50" />
             </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Google Maps Link</label>
+              <input type="url" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="https://maps.google.com/?q=..." />
+              <p className="text-xs text-gray-600 mt-1">Paste a Google Maps or any map URL</p>
+            </div>
+            <ImageUpload
+              currentUrl={form.image_url}
+              onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+            />
             {formError && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{formError}</p>}
             {formSuccess && <p className="text-green-400 text-xs bg-green-900/20 border border-green-800/40 rounded-lg px-3 py-2">{formSuccess}</p>}
             <button type="submit" disabled={formLoading}

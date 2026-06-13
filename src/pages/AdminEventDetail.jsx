@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import ImageUpload from '../components/ImageUpload';
 
 export default function AdminEventDetail() {
   const { eventId } = useParams();
@@ -39,7 +40,7 @@ export default function AdminEventDetail() {
     if (!data) { navigate('/admin/dashboard'); return; }
     setEvent(data);
     const date = new Date(data.date);
-    setForm({ title: data.title, description: data.description ?? '', date: date.toISOString().split('T')[0], time: date.toTimeString().slice(0, 5), venue: data.venue, capacity: String(data.capacity), status: data.status });
+    setForm({ title: data.title, description: data.description ?? '', date: date.toISOString().split('T')[0], time: date.toTimeString().slice(0, 5), venue: data.venue, capacity: String(data.capacity), status: data.status, image_url: data.image_url ?? '', maps_url: data.maps_url ?? '' });
   }
 
   async function fetchGuests() {
@@ -52,7 +53,7 @@ export default function AdminEventDetail() {
   async function saveEvent(e) {
     e.preventDefault(); setSaving(true); setSaveMsg('');
     const datetime = new Date(`${form.date}T${form.time}`).toISOString();
-    const { error } = await supabase.from('events').update({ title: form.title.trim(), description: form.description.trim() || null, date: datetime, venue: form.venue.trim(), capacity: parseInt(form.capacity), status: form.status }).eq('id', eventId);
+    const { error } = await supabase.from('events').update({ title: form.title.trim(), description: form.description.trim() || null, date: datetime, venue: form.venue.trim(), capacity: parseInt(form.capacity), status: form.status, image_url: form.image_url || null, maps_url: form.maps_url?.trim() || null }).eq('id', eventId);
     setSaveMsg(error ? error.message : 'Saved!');
     setSaving(false);
     if (!error) fetchEvent();
@@ -171,6 +172,16 @@ export default function AdminEventDetail() {
             </select>
           </div>
         </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Google Maps Link</label>
+          <input type="url" value={form.maps_url ?? ''} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+            placeholder="https://maps.google.com/?q=..." />
+        </div>
+        <ImageUpload
+          currentUrl={form.image_url}
+          onUpload={(url) => setForm(f => ({ ...f, image_url: url }))}
+        />
         {saveMsg && <p className={`text-xs rounded-lg px-3 py-2 ${saveMsg === 'Saved!' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>{saveMsg}</p>}
         <button type="submit" disabled={saving}
           className="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">

@@ -2,9 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useUnread } from '../context/UnreadContext';
 
 export default function Rooms() {
   const { session, profile } = useAuth();
+  const { unreadSet, markRead } = useUnread();
   const navigate = useNavigate();
   const isAdmin = profile?.role === 'admin';
 
@@ -61,6 +63,7 @@ export default function Rooms() {
         (payload) => {
           setMessages(prev => [...prev, payload.new]);
           setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+          markRead(activeRoom.id);
         }
       ).subscribe();
     return () => supabase.removeChannel(channel);
@@ -73,7 +76,10 @@ export default function Rooms() {
       .select('id, event_id, events(id, title, date, status)')
       .order('created_at', { ascending: false });
     setRooms(data ?? []);
-    if (data?.length > 0) setActiveRoom(data[0]);
+    if (data?.length > 0) {
+      setActiveRoom(data[0]);
+      markRead(data[0].id);
+    }
     setLoading(false);
   }
 
@@ -92,6 +98,7 @@ export default function Rooms() {
     setActiveRoom(room);
     setKicked(false);
     setScreen('chat');
+    markRead(room.id);
     setTimeout(() => inputRef.current?.focus(), 100);
   }
 
@@ -104,7 +111,7 @@ export default function Rooms() {
       user_id: session.user.id,
       content: newMsg.trim(),
     });
-    if (!error) setNewMsg('');
+    if (!error) { setNewMsg(''); markRead(activeRoom.id); }
     setSending(false);
     inputRef.current?.focus();
   }
@@ -145,16 +152,22 @@ export default function Rooms() {
           {rooms.map((room) => {
             const ev = room.events;
             const isActive = activeRoom?.id === room.id;
+            const hasUnread = !isActive && unreadSet.has(room.id);
             return (
               <button key={room.id} onClick={() => openRoom(room)}
                 className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-800/60 text-left transition-colors active:bg-gray-800 ${isActive ? 'bg-gray-800' : 'hover:bg-gray-800/50'}`}>
-                <div className={`w-11 h-11 rounded-full shrink-0 flex items-center justify-center text-lg font-bold ${isActive ? 'bg-brand-600' : 'bg-gray-700'}`}>
-                  {isAdmin ? '🛡️' : '🎉'}
+                <div className="relative shrink-0">
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center text-lg font-bold ${isActive ? 'bg-brand-600' : 'bg-gray-700'}`}>
+                    {isAdmin ? '🛡️' : '🎉'}
+                  </div>
+                  {hasUnread && (
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-500 border-2 border-gray-900" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white truncate">{ev?.title ?? 'Event'}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 truncate">
-                    {ev?.status === 'ended' ? '🔴 Ended' : `📅 ${new Date(ev?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                  <p className={`text-sm truncate ${hasUnread ? 'font-bold text-white' : 'font-semibold text-white'}`}>{ev?.title ?? 'Event'}</p>
+                  <p className={`text-xs mt-0.5 truncate ${hasUnread ? 'text-red-400' : 'text-gray-500'}`}>
+                    {hasUnread ? 'New messages' : ev?.status === 'ended' ? '🔴 Ended' : `📅 ${new Date(ev?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                   </p>
                 </div>
                 {isActive && <div className="w-2 h-2 rounded-full bg-brand-400 shrink-0" />}

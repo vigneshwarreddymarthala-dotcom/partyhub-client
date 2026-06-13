@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { UnreadProvider } from './context/UnreadContext';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -28,6 +29,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <UnreadProvider>
         <Layout>
           <Routes>
             {/* Public */}
@@ -45,6 +47,7 @@ export default function App() {
             <Route path="/admin/event/:eventId" element={<AdminEventDetail />} />
           </Routes>
         </Layout>
+        </UnreadProvider>
       </AuthProvider>
     </BrowserRouter>
   );
