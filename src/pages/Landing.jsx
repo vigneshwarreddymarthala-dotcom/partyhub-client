@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import EventCard from '../components/EventCard';
 
@@ -73,6 +74,17 @@ export default function Landing() {
           ))}
         </div>
       )}
+
+      {/* Footer */}
+      <div className="mt-16 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
+        <p>© 2026 PartyHub. All rights reserved.</p>
+        <Link
+          to="/admin/login"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-800 text-gray-600 hover:text-gray-400 hover:border-gray-700 transition-colors"
+        >
+          🛡️ Admin Portal
+        </Link>
+      </div>
     </div>
   );
 }

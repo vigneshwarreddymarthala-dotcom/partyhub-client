@@ -144,6 +144,16 @@ export default function Login() {
             </>
           )}
         </p>
+
+        {/* Admin portal link */}
+        <div className="mt-8 text-center">
+          <Link
+            to="/admin/login"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-700 text-sm text-gray-400 hover:text-white hover:border-brand-600 transition-colors"
+          >
+            <span>🛡️</span> Admin Portal
+          </Link>
+        </div>
       </div>
     </div>
   );
