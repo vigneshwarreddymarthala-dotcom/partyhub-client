@@ -80,7 +80,12 @@ export default function Landing() {
 
       {/* Footer */}
       <div className="mt-16 pt-6 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
-        <p>© 2026 PartyHub. All rights reserved.</p>
+        <div className="flex items-center gap-4">
+          <p>© 2026 SpielFinder. All rights reserved.</p>
+          <Link to="/impressum" className="text-gray-600 hover:text-gray-400 transition-colors underline underline-offset-2">
+            Impressum
+          </Link>
+        </div>
         <Link
           to="/admin/login"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-800 text-gray-600 hover:text-gray-400 hover:border-gray-700 transition-colors"
