@@ -678,102 +678,140 @@ export default function Admin() {
 
       {/* ── View 4: Profile ── */}
       {view === 4 && (
-        <div className="max-w-lg">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-lg font-semibold text-white">Organiser Profile</h2>
+        <div className="max-w-5xl">
+          {/* Header */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-white">Organiser Profile</h2>
+              <p className="text-xs text-gray-500 mt-0.5">This is what attendees see when they visit your public page.</p>
+            </div>
             <a href={`/organizer/${session?.user?.id}`} target="_blank" rel="noopener noreferrer"
-              className="text-xs text-brand-400 hover:text-brand-300 border border-brand-800 hover:border-brand-600 px-3 py-1.5 rounded-lg transition-colors">
+              className="flex items-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 border border-brand-800 hover:border-brand-600 px-4 py-2 rounded-xl transition-colors">
               View public page ↗
             </a>
           </div>
-          <p className="text-xs text-gray-500 mb-5">This is what attendees see when they visit your organiser page.</p>
 
-          {/* Cover + Avatar preview card */}
-          <div className="mb-5 rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
-            {/* Cover banner */}
-            <div className="relative h-32 bg-gradient-to-br from-brand-800 to-purple-900">
-              {profileForm.cover_url && (
-                <img src={profileForm.cover_url} alt="Cover" className="w-full h-full object-cover" />
-              )}
-              <span className="absolute bottom-2 right-2 text-xs text-white/50 bg-black/40 px-2 py-0.5 rounded-full">Cover photo</span>
-            </div>
-            {/* Avatar overlapping cover */}
-            <div className="relative px-5 pb-4">
-              <div className="absolute -top-9 left-5">
-                <div className="w-16 h-16 rounded-full ring-4 ring-gray-900 overflow-hidden bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shrink-0">
-                  {profileForm.avatar_url
-                    ? <img src={profileForm.avatar_url} alt="Logo" className="w-full h-full object-cover" />
-                    : <span className="text-lg font-extrabold text-white select-none">
-                        {(profileForm.full_name || 'O').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
-                      </span>
-                  }
+          <form onSubmit={saveProfile}>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+              {/* ── LEFT: Branding / Images ── */}
+              <div className="lg:col-span-2 space-y-4">
+
+                {/* Live preview card */}
+                <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+                  <div className="relative h-36 bg-gradient-to-br from-brand-800 via-purple-900 to-gray-900">
+                    {profileForm.cover_url
+                      ? <img src={profileForm.cover_url} alt="Cover" className="w-full h-full object-cover" />
+                      : <div className="absolute inset-0 flex items-center justify-center">
+                          <p className="text-xs text-white/30">Cover photo preview</p>
+                        </div>
+                    }
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent" />
+                  </div>
+                  <div className="relative px-5 pb-5">
+                    <div className="absolute -top-8 left-5">
+                      <div className="w-14 h-14 rounded-full ring-4 ring-gray-900 overflow-hidden bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shrink-0 shadow-lg">
+                        {profileForm.avatar_url
+                          ? <img src={profileForm.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                          : <span className="text-base font-extrabold text-white select-none">
+                              {(profileForm.full_name || 'O').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                            </span>
+                        }
+                      </div>
+                    </div>
+                    <div className="pt-10">
+                      <p className="text-sm font-bold text-white leading-tight">{profileForm.full_name || 'Your Name'}</p>
+                      {profileForm.company_name && <p className="text-xs text-brand-400 mt-0.5">{profileForm.company_name}</p>}
+                      {profileForm.bio && <p className="text-xs text-gray-400 mt-1.5 line-clamp-2">{profileForm.bio}</p>}
+                      {profileForm.country && <p className="text-xs text-gray-500 mt-1.5">🌍 {profileForm.country}</p>}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Avatar upload */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+                  <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">Profile Logo / Avatar</p>
+                  <p className="text-xs text-gray-500 mb-3">Circular image shown on event cards and your profile.</p>
+                  <ImageUpload
+                    label=""
+                    currentUrl={profileForm.avatar_url}
+                    folder="profiles"
+                    aspect="square"
+                    onUpload={url => setProfileForm(f => ({ ...f, avatar_url: url }))}
+                  />
+                </div>
+
+                {/* Cover upload */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+                  <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider mb-1">Cover / Background Image</p>
+                  <p className="text-xs text-gray-500 mb-3">Wide banner shown at the top of your public page.</p>
+                  <ImageUpload
+                    label=""
+                    currentUrl={profileForm.cover_url}
+                    folder="profiles"
+                    aspect="banner"
+                    onUpload={url => setProfileForm(f => ({ ...f, cover_url: url }))}
+                  />
+                </div>
+
               </div>
-              <div className="pt-10">
-                <p className="text-sm font-semibold text-white">{profileForm.full_name || 'Your Name'}</p>
-                {profileForm.company_name && <p className="text-xs text-brand-400">{profileForm.company_name}</p>}
+
+              {/* ── RIGHT: Info fields ── */}
+              <div className="lg:col-span-3 space-y-4">
+
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 sm:p-6 space-y-4">
+                  <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Profile Details</p>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Full Name *</label>
+                    <input required value={profileForm.full_name} onChange={e => setProfileForm(f => ({ ...f, full_name: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="Your full name" />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Company / Organisation <span className="text-gray-600 font-normal">(optional)</span></label>
+                    <input value={profileForm.company_name} onChange={e => setProfileForm(f => ({ ...f, company_name: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="e.g. Expat Stuttgart e.V." />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Bio <span className="text-gray-600 font-normal">(shown on your public page)</span></label>
+                    <textarea value={profileForm.bio} onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
+                      rows={4} maxLength={300}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 resize-none"
+                      placeholder="Tell attendees about yourself or your organisation…" />
+                    <p className="text-right text-xs text-gray-600 mt-1">{profileForm.bio?.length ?? 0} / 300</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Country</label>
+                    <CountrySelect
+                      value={profileForm.country}
+                      onChange={val => setProfileForm(f => ({ ...f, country: val }))}
+                      placeholder="Search your country…"
+                    />
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-800">
+                    <p className="text-xs text-gray-600">Account email: <span className="text-gray-400">{session?.user?.email}</span></p>
+                  </div>
+                </div>
+
+                {profileMsg && (
+                  <p className={`text-sm rounded-xl px-4 py-3 ${profileMsgType === 'success' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>
+                    {profileMsg}
+                  </p>
+                )}
+
+                <button type="submit" disabled={profileSaving}
+                  className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-bold text-white transition-colors disabled:opacity-60 shadow-lg shadow-brand-900/40">
+                  {profileSaving ? 'Saving…' : '💾 Save Profile'}
+                </button>
               </div>
-            </div>
-          </div>
 
-          <form onSubmit={saveProfile} className="space-y-4">
-            {/* Logo / Avatar upload */}
-            <ImageUpload
-              label="Profile Logo / Avatar"
-              currentUrl={profileForm.avatar_url}
-              folder="profiles"
-              aspect="square"
-              onUpload={url => setProfileForm(f => ({ ...f, avatar_url: url }))}
-            />
-
-            {/* Cover image upload */}
-            <ImageUpload
-              label="Cover / Background Image"
-              currentUrl={profileForm.cover_url}
-              folder="profiles"
-              aspect="banner"
-              onUpload={url => setProfileForm(f => ({ ...f, cover_url: url }))}
-            />
-
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Full Name *</label>
-              <input required value={profileForm.full_name} onChange={e => setProfileForm(f => ({ ...f, full_name: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="Your full name" />
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Company / Organisation <span className="text-gray-600">(optional)</span></label>
-              <input value={profileForm.company_name} onChange={e => setProfileForm(f => ({ ...f, company_name: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="e.g. Expat Stuttgart e.V." />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Bio <span className="text-gray-600">(shown on your public page)</span></label>
-              <textarea value={profileForm.bio} onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
-                rows={3} maxLength={300}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"
-                placeholder="Tell attendees about yourself or your club…" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Country</label>
-              <CountrySelect
-                value={profileForm.country}
-                onChange={val => setProfileForm(f => ({ ...f, country: val }))}
-                placeholder="Search your country…"
-              />
-            </div>
-            <div className="pt-1 pb-2 border-t border-gray-800">
-              <p className="text-xs text-gray-600 mt-2">Email: <span className="text-gray-400">{session?.user?.email}</span></p>
-            </div>
-            {profileMsg && (
-              <p className={`text-xs rounded-lg px-3 py-2 ${profileMsgType === 'success' ? 'text-green-400 bg-green-900/20 border border-green-800/40' : 'text-red-400 bg-red-900/20 border border-red-800/40'}`}>
-                {profileMsg}
-              </p>
-            )}
-            <button type="submit" disabled={profileSaving}
-              className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
-              {profileSaving ? 'Saving…' : 'Save Profile'}
-            </button>
           </form>
         </div>
       )}
