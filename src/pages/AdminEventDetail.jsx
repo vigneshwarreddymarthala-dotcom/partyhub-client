@@ -4,6 +4,23 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 
+const COUNTRIES = [
+  'Germany','Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Azerbaijan',
+  'Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Bulgaria',
+  'Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Czech Republic',
+  'Denmark','Ecuador','Egypt','Ethiopia','Finland','France','Georgia','Ghana','Greece',
+  'Guatemala','Hungary','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
+  'Japan','Jordan','Kazakhstan','Kenya','South Korea','Kosovo','Kuwait','Kyrgyzstan',
+  'Lebanon','Libya','Malaysia','Mexico','Moldova','Mongolia','Montenegro','Morocco',
+  'Myanmar','Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
+  'Pakistan','Palestine','Peru','Philippines','Poland','Portugal','Romania','Russia',
+  'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa',
+  'Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
+  'Tanzania','Thailand','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine',
+  'United Arab Emirates','United Kingdom','United States','Uzbekistan','Venezuela',
+  'Vietnam','Yemen','Zimbabwe',
+];
+
 export default function AdminEventDetail() {
   const { eventId } = useParams();
   const { session, profile, loading: authLoading } = useAuth();
@@ -13,7 +30,7 @@ export default function AdminEventDetail() {
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [form, setForm] = useState({
     title: '', description: '', date: '', time: '',
-    venue: '', city: '', capacity: '', price: '', status: 'active', image_url: '', maps_url: '', meet_link: '', recurrence: 'none',
+    venue: '', city: '', capacity: '', price: '', target_country: '', status: 'active', image_url: '', maps_url: '', meet_link: '', recurrence: 'none',
     publish_date: '', publish_time: '',
   });
   const [saving, setSaving] = useState(false);
@@ -67,6 +84,7 @@ export default function AdminEventDetail() {
       image_url_2: data.image_url_2 ?? '',
       image_url_3: data.image_url_3 ?? '',
       price: data.price != null ? String(data.price) : '',
+      target_country: data.target_country ?? '',
       maps_url: data.maps_url ?? '',
       meet_link: data.meet_link ?? '',
       recurrence: data.recurrence ?? 'none',
@@ -110,6 +128,7 @@ export default function AdminEventDetail() {
     if (form.maps_url !== undefined) payload.maps_url = form.maps_url.trim() || null;
     if (form.meet_link !== undefined) payload.meet_link = form.meet_link.trim() || null;
     payload.price = form.price !== '' ? parseFloat(form.price) : null;
+    payload.target_country = form.target_country || null;
 
     const { error } = await supabase.from('events').update(payload).eq('id', eventId);
 
@@ -211,6 +230,14 @@ export default function AdminEventDetail() {
           <datalist id="city-suggestions-edit">
             {citySuggestions.map(c => <option key={c} value={c} />)}
           </datalist>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Target Country <span className="text-gray-600">(leave blank for everyone)</span></label>
+          <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
+            <option value="">🌍 All countries</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 import EventCard from '../components/EventCard';
 
 export default function Landing() {
+  const { profile } = useAuth();
   const [events, setEvents] = useState([]);
   const [rsvpCounts, setRsvpCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ export default function Landing() {
 
   // Fetch cities once on mount
   useEffect(() => { fetchCities(); }, []);
-  useEffect(() => { fetchEvents(); }, [filter, cityFilter]);
+  useEffect(() => { fetchEvents(); }, [filter, cityFilter, profile]);
 
   async function fetchCities() {
     const { data } = await supabase
@@ -31,6 +33,10 @@ export default function Landing() {
       .neq('status', 'scheduled').is('deleted_at', null);
     if (filter === 'active') query = query.eq('status', 'active');
     if (cityFilter !== 'all') query = query.eq('city', cityFilter);
+    // Country filter: show global events + events targeted to user's country
+    if (profile?.country) {
+      query = query.or(`target_country.is.null,target_country.eq.${profile.country}`);
+    }
     const { data } = await query;
     if (!data) { setLoading(false); return; }
     setEvents(data);

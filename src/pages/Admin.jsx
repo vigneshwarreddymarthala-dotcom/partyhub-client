@@ -4,6 +4,23 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 
+const COUNTRIES = [
+  'Germany','Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Azerbaijan',
+  'Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Bulgaria',
+  'Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Czech Republic',
+  'Denmark','Ecuador','Egypt','Ethiopia','Finland','France','Georgia','Ghana','Greece',
+  'Guatemala','Hungary','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
+  'Japan','Jordan','Kazakhstan','Kenya','South Korea','Kosovo','Kuwait','Kyrgyzstan',
+  'Lebanon','Libya','Malaysia','Mexico','Moldova','Mongolia','Montenegro','Morocco',
+  'Myanmar','Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
+  'Pakistan','Palestine','Peru','Philippines','Poland','Portugal','Romania','Russia',
+  'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa',
+  'Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
+  'Tanzania','Thailand','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine',
+  'United Arab Emirates','United Kingdom','United States','Uzbekistan','Venezuela',
+  'Vietnam','Yemen','Zimbabwe',
+];
+
 export default function Admin() {
   const { session, profile, loading: authLoading, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -14,7 +31,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', target_country: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -207,7 +224,7 @@ export default function Admin() {
       ...(isScheduled && { status: 'scheduled', scheduled_at: new Date(`${form.publish_date}T${form.publish_time}`).toISOString() }),
     };
     // Include optional columns only if they exist in the schema
-    const full = { ...base, city: form.city.trim() || null, price: form.price !== '' ? parseFloat(form.price) : null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
+    const full = { ...base, city: form.city.trim() || null, price: form.price !== '' ? parseFloat(form.price) : null, target_country: form.target_country || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
 
     let { data: insertedEvent, error } = await supabase.from('events').insert(full).select('id').single();
 
@@ -225,7 +242,7 @@ export default function Admin() {
       await supabase.from('chat_rooms').insert({ event_id: insertedEvent.id });
     }
 
-    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', target_country: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -387,6 +404,14 @@ export default function Admin() {
               <datalist id="city-suggestions">
                 {citySuggestions.map(c => <option key={c} value={c} />)}
               </datalist>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Target Country <span className="text-gray-600">(optional — leave blank to show to everyone)</span></label>
+              <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
+                <option value="">🌍 All countries (everyone sees this)</option>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Capacity *</label>

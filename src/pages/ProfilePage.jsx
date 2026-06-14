@@ -3,6 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
+const COUNTRIES = [
+  'Germany','Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Azerbaijan',
+  'Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Bulgaria',
+  'Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Czech Republic',
+  'Denmark','Ecuador','Egypt','Ethiopia','Finland','France','Georgia','Ghana','Greece',
+  'Guatemala','Hungary','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
+  'Japan','Jordan','Kazakhstan','Kenya','South Korea','Kosovo','Kuwait','Kyrgyzstan',
+  'Lebanon','Libya','Malaysia','Mexico','Moldova','Mongolia','Montenegro','Morocco',
+  'Myanmar','Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
+  'Pakistan','Palestine','Peru','Philippines','Poland','Portugal','Romania','Russia',
+  'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa',
+  'Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
+  'Tanzania','Thailand','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine',
+  'United Arab Emirates','United Kingdom','United States','Uzbekistan','Venezuela',
+  'Vietnam','Yemen','Zimbabwe',
+];
+
 export default function ProfilePage() {
   const { session, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
@@ -10,6 +27,7 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [country, setCountry] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -19,6 +37,7 @@ export default function ProfilePage() {
       setFullName(profile.full_name ?? '');
       setUsername(profile.username ?? '');
       setBio(profile.bio ?? '');
+      setCountry(profile.country ?? '');
     }
   }, [profile]);
 
@@ -38,6 +57,7 @@ export default function ProfilePage() {
       full_name: fullName.trim(),
       username: username.trim(),
       bio: bio.trim(),
+      country: country || null,
       role: profile?.role ?? 'user',
     };
 
@@ -99,6 +119,18 @@ export default function ProfilePage() {
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"
             placeholder="Tell people a bit about yourself…"
           />
+        </div>
+
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Your Country <span className="text-gray-600">(helps show relevant events)</span></label>
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
+          >
+            <option value="">— Select your country —</option>
+            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
 
         {error && (
