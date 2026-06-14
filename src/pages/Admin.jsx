@@ -593,17 +593,9 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {/* Chat room icon — auto-creates room if missing (edge case for old events) */}
+                      {/* Chat room icon — navigate by event_id so it always works */}
                       <button
-                        onClick={async () => {
-                          let id = roomId;
-                          if (!id) {
-                            const { data } = await supabase.from('chat_rooms').insert({ event_id: ev.id }).select('id').single();
-                            id = data?.id;
-                            fetchEvents();
-                          }
-                          if (id) navigate(`/admin/rooms?room=${id}`);
-                        }}
+                        onClick={() => navigate(`/admin/rooms?event=${ev.id}`)}
                         className="w-9 h-9 rounded-lg bg-brand-900/40 hover:bg-brand-800/60 text-brand-400 hover:text-brand-300 flex items-center justify-center transition-colors"
                         title="Open chat room"
                       >

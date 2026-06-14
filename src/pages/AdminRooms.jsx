@@ -7,7 +7,8 @@ export default function AdminRooms() {
   const { session, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const preselect = searchParams.get('room'); // ?room=<roomId> from event manage page
+  const preselect = searchParams.get('room');   // ?room=<roomId>
+  const preselectEvent = searchParams.get('event'); // ?event=<eventId> from Events tab
 
   const [rooms, setRooms] = useState([]);
   const [activeRoom, setActiveRoom] = useState(null);
@@ -44,7 +45,7 @@ export default function AdminRooms() {
 
   async function fetchRooms() {
     setLoading(true);
-    let roomList = [];
+    let roomList = []; // must be let — may be extended when auto-creating a room
 
     if (profile?.role === 'sub_admin') {
       // Sub-admin: only rooms belonging to their events
@@ -67,11 +68,23 @@ export default function AdminRooms() {
     }
     setRooms(roomList);
 
-    // Auto-select: either the preselected room from query param, or first room
+    // Auto-select room: by room id, or by event id, or fallback to first
     if (preselect) {
       const target = roomList.find(r => r.id === preselect);
       if (target) { setActiveRoom(target); setScreen('chat'); }
-      else if (roomList.length > 0) setActiveRoom(roomList[0]);
+      else if (roomList.length > 0) { setActiveRoom(roomList[0]); setScreen('chat'); }
+    } else if (preselectEvent) {
+      const target = roomList.find(r => r.event_id === preselectEvent);
+      if (target) { setActiveRoom(target); setScreen('chat'); }
+      else {
+        // Room doesn't exist yet — create it then select it
+        const { data } = await supabase
+          .from('chat_rooms')
+          .insert({ event_id: preselectEvent })
+          .select('id, event_id, events(id, title, date, status)')
+          .single();
+        if (data) { roomList = [...roomList, data]; setRooms(roomList); setActiveRoom(data); setScreen('chat'); }
+      }
     } else if (roomList.length > 0) {
       setActiveRoom(roomList[0]);
     }
