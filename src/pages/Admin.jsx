@@ -593,22 +593,24 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {roomId ? (
-                        <button onClick={() => navigate(`/admin/rooms?room=${roomId}`)}
-                          className="w-9 h-9 rounded-lg bg-brand-900/50 hover:bg-brand-800/60 text-brand-400 flex items-center justify-center transition-colors"
-                          title="Open chat room">
-                          💬
-                        </button>
-                      ) : (
-                        <button onClick={async () => {
-                          await supabase.from('chat_rooms').insert({ event_id: ev.id });
-                          fetchEvents();
+                      {/* Chat room icon — auto-creates room if missing (edge case for old events) */}
+                      <button
+                        onClick={async () => {
+                          let id = roomId;
+                          if (!id) {
+                            const { data } = await supabase.from('chat_rooms').insert({ event_id: ev.id }).select('id').single();
+                            id = data?.id;
+                            fetchEvents();
+                          }
+                          if (id) navigate(`/admin/rooms?room=${id}`);
                         }}
-                          className="px-2 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-400 hover:text-white transition-colors"
-                          title="Create chat room">
-                          + Room
-                        </button>
-                      )}
+                        className="w-9 h-9 rounded-lg bg-brand-900/40 hover:bg-brand-800/60 text-brand-400 hover:text-brand-300 flex items-center justify-center transition-colors"
+                        title="Open chat room"
+                      >
+                        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
+                          <path d="M20 2H4a2 2 0 00-2 2v18l4-4h14a2 2 0 002-2V4a2 2 0 00-2-2zm-2 10H6V10h12v2zm0-3H6V7h12v2z"/>
+                        </svg>
+                      </button>
                       <Link to={`/admin/event/${ev.id}`}
                         className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors">
                         Manage
