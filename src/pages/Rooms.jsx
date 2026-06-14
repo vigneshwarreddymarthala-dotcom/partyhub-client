@@ -71,10 +71,29 @@ export default function Rooms() {
 
   async function fetchRooms() {
     setLoading(true);
-    const { data } = await supabase
-      .from('chat_rooms')
-      .select('id, event_id, events(id, title, date, status, meet_link)')
-      .order('created_at', { ascending: false });
+    let data;
+    if (isAdmin || profile?.role === 'sub_admin') {
+      // Admins see all rooms
+      ({ data } = await supabase
+        .from('chat_rooms')
+        .select('id, event_id, events(id, title, date, status, meet_link)')
+        .order('created_at', { ascending: false }));
+    } else {
+      // Regular users: only rooms for events they RSVPed to
+      const { data: myRsvps } = await supabase
+        .from('rsvps')
+        .select('event_id')
+        .eq('user_id', session.user.id);
+      const eventIds = (myRsvps ?? []).map(r => r.event_id);
+      if (eventIds.length === 0) {
+        setRooms([]); setLoading(false); return;
+      }
+      ({ data } = await supabase
+        .from('chat_rooms')
+        .select('id, event_id, events(id, title, date, status, meet_link)')
+        .in('event_id', eventIds)
+        .order('created_at', { ascending: false }));
+    }
     setRooms(data ?? []);
     if (data?.length > 0) {
       setActiveRoom(data[0]);
