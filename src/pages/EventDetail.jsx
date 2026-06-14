@@ -195,14 +195,6 @@ export default function EventDetail() {
             Join Google Meet
           </a>
         )}
-        {!myRsvp && event.meet_link && !isEnded && !isScheduled && (
-          <div className="flex items-center gap-2.5 w-full py-3 px-4 rounded-xl bg-gray-800/60 border border-gray-700/50 text-sm text-gray-500 mb-4">
-            <svg viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor">
-              <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
-            </svg>
-            Google Meet link unlocks after RSVP 🔒
-          </div>
-        )}
 
         {/* Action buttons — full width on mobile */}
         <div className="flex flex-col sm:flex-row gap-3">
