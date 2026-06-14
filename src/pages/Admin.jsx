@@ -3,23 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
+import CountrySelect from '../components/CountrySelect';
 
-const COUNTRIES = [
-  'Germany','Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Azerbaijan',
-  'Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Bulgaria',
-  'Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Czech Republic',
-  'Denmark','Ecuador','Egypt','Ethiopia','Finland','France','Georgia','Ghana','Greece',
-  'Guatemala','Hungary','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
-  'Japan','Jordan','Kazakhstan','Kenya','South Korea','Kosovo','Kuwait','Kyrgyzstan',
-  'Lebanon','Libya','Malaysia','Mexico','Moldova','Mongolia','Montenegro','Morocco',
-  'Myanmar','Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
-  'Pakistan','Palestine','Peru','Philippines','Poland','Portugal','Romania','Russia',
-  'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa',
-  'Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
-  'Tanzania','Thailand','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine',
-  'United Arab Emirates','United Kingdom','United States','Uzbekistan','Venezuela',
-  'Vietnam','Yemen','Zimbabwe',
-];
 
 export default function Admin() {
   const { session, profile, loading: authLoading, refreshProfile } = useAuth();
@@ -448,11 +433,12 @@ export default function Admin() {
                 {/* Target Country */}
                 <div>
                   <label className="block text-xs font-medium text-gray-400 mb-1.5">Target Country <span className="text-gray-600 font-normal">(leave blank to show to everyone)</span></label>
-                  <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30">
-                    <option value="">🌍 All countries (everyone sees this)</option>
-                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <CountrySelect
+                    value={form.target_country}
+                    onChange={val => setForm(f => ({ ...f, target_country: val }))}
+                    allOption={true}
+                    placeholder="All countries (everyone sees this)"
+                  />
                 </div>
 
                 {/* Maps + Meet in a row */}
@@ -770,11 +756,11 @@ export default function Admin() {
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Country</label>
-              <select value={profileForm.country} onChange={e => setProfileForm(f => ({ ...f, country: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
-                <option value="">— Select country —</option>
-                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <CountrySelect
+                value={profileForm.country}
+                onChange={val => setProfileForm(f => ({ ...f, country: val }))}
+                placeholder="Search your country…"
+              />
             </div>
             <div className="pt-1 pb-2 border-t border-gray-800">
               <p className="text-xs text-gray-600 mt-2">Email: <span className="text-gray-400">{session?.user?.email}</span></p>

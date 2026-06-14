@@ -3,23 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
-
-const COUNTRIES = [
-  'Germany','Afghanistan','Albania','Algeria','Argentina','Australia','Austria','Azerbaijan',
-  'Bangladesh','Belarus','Belgium','Bolivia','Bosnia and Herzegovina','Brazil','Bulgaria',
-  'Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Czech Republic',
-  'Denmark','Ecuador','Egypt','Ethiopia','Finland','France','Georgia','Ghana','Greece',
-  'Guatemala','Hungary','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy',
-  'Japan','Jordan','Kazakhstan','Kenya','South Korea','Kosovo','Kuwait','Kyrgyzstan',
-  'Lebanon','Libya','Malaysia','Mexico','Moldova','Mongolia','Montenegro','Morocco',
-  'Myanmar','Nepal','Netherlands','New Zealand','Nigeria','North Macedonia','Norway',
-  'Pakistan','Palestine','Peru','Philippines','Poland','Portugal','Romania','Russia',
-  'Saudi Arabia','Senegal','Serbia','Singapore','Slovakia','Slovenia','Somalia','South Africa',
-  'Spain','Sri Lanka','Sudan','Sweden','Switzerland','Syria','Taiwan','Tajikistan',
-  'Tanzania','Thailand','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine',
-  'United Arab Emirates','United Kingdom','United States','Uzbekistan','Venezuela',
-  'Vietnam','Yemen','Zimbabwe',
-];
+import CountrySelect from '../components/CountrySelect';
 
 export default function AdminEventDetail() {
   const { eventId } = useParams();
@@ -233,11 +217,12 @@ export default function AdminEventDetail() {
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1">Target Country <span className="text-gray-600">(leave blank for everyone)</span></label>
-          <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500">
-            <option value="">🌍 All countries</option>
-            {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <CountrySelect
+            value={form.target_country}
+            onChange={val => setForm(f => ({ ...f, target_country: val }))}
+            allOption={true}
+            placeholder="All countries (everyone sees this)"
+          />
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>
