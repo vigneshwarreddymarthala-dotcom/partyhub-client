@@ -154,18 +154,20 @@ export default function EventDetail() {
 
         {/* Organiser info */}
         {event.profiles && (
-          <div className="flex items-center gap-3 mb-5 px-3 py-3 rounded-xl bg-gray-800/50 border border-gray-800">
+          <Link to={`/organizer/${event.created_by}`}
+            className="flex items-center gap-3 mb-5 px-3 py-3 rounded-xl bg-gray-800/50 border border-gray-800 hover:border-brand-700 hover:bg-gray-800 transition-colors group">
             <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-sm font-bold text-white shrink-0">
               {event.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-500">Organised by</p>
-              <p className="text-sm font-semibold text-white truncate">{event.profiles.full_name}</p>
+              <p className="text-sm font-semibold text-white truncate group-hover:text-brand-300 transition-colors">{event.profiles.full_name}</p>
               {event.profiles.company_name && (
                 <p className="text-xs text-brand-400 truncate">{event.profiles.company_name}</p>
               )}
             </div>
-          </div>
+            <span className="text-xs text-gray-600 group-hover:text-brand-400 transition-colors shrink-0">View profile →</span>
+          </Link>
         )}
 
         {/* Capacity bar */}
