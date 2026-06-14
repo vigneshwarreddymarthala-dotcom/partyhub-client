@@ -50,6 +50,64 @@ export default function Landing() {
         <span className="inline-block text-xs font-semibold tracking-widest text-brand-400 uppercase mb-4 px-3 py-1.5 rounded-full bg-brand-900/50 border border-brand-800/60">
           For Expats in Germany
         </span>
+
+        {/* Party people illustration */}
+        <div className="flex justify-center mb-5">
+          <svg viewBox="0 0 220 90" className="w-48 sm:w-56 h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Confetti dots */}
+            <circle cx="18" cy="18" r="3" fill="#a855f7" opacity="0.7"/>
+            <circle cx="200" cy="14" r="2.5" fill="#f472b6" opacity="0.7"/>
+            <circle cx="35" cy="10" r="2" fill="#60a5fa" opacity="0.6"/>
+            <circle cx="185" cy="28" r="3" fill="#34d399" opacity="0.6"/>
+            <circle cx="110" cy="8" r="2" fill="#fbbf24" opacity="0.7"/>
+            <circle cx="155" cy="10" r="2.5" fill="#f87171" opacity="0.6"/>
+            <circle cx="65" cy="12" r="2" fill="#a78bfa" opacity="0.6"/>
+
+            {/* Person 1 - left, arms up */}
+            <circle cx="42" cy="30" r="9" fill="#7c3aed"/>
+            <rect x="37" y="40" width="10" height="22" rx="5" fill="#7c3aed"/>
+            {/* left arm raised */}
+            <line x1="42" y1="46" x2="28" y2="32" stroke="#7c3aed" strokeWidth="5" strokeLinecap="round"/>
+            {/* right arm */}
+            <line x1="42" y1="46" x2="54" y2="38" stroke="#7c3aed" strokeWidth="5" strokeLinecap="round"/>
+
+            {/* Person 2 - centre-left, raising glass */}
+            <circle cx="82" cy="28" r="10" fill="#2563eb"/>
+            <rect x="76" y="39" width="12" height="24" rx="6" fill="#2563eb"/>
+            {/* arm up with glass */}
+            <line x1="82" y1="46" x2="68" y2="30" stroke="#2563eb" strokeWidth="5" strokeLinecap="round"/>
+            <circle cx="65" cy="27" r="4" fill="#93c5fd" opacity="0.9"/>
+            {/* other arm */}
+            <line x1="82" y1="46" x2="96" y2="36" stroke="#2563eb" strokeWidth="5" strokeLinecap="round"/>
+
+            {/* Person 3 - centre, tallest, both arms up */}
+            <circle cx="120" cy="24" r="11" fill="#db2777"/>
+            <rect x="113" y="36" width="14" height="26" rx="7" fill="#db2777"/>
+            <line x1="120" y1="44" x2="104" y2="28" stroke="#db2777" strokeWidth="5.5" strokeLinecap="round"/>
+            <line x1="120" y1="44" x2="136" y2="28" stroke="#db2777" strokeWidth="5.5" strokeLinecap="round"/>
+
+            {/* Person 4 - centre-right */}
+            <circle cx="158" cy="28" r="10" fill="#059669"/>
+            <rect x="152" y="39" width="12" height="24" rx="6" fill="#059669"/>
+            <line x1="158" y1="46" x2="144" y2="34" stroke="#059669" strokeWidth="5" strokeLinecap="round"/>
+            <line x1="158" y1="46" x2="172" y2="30" stroke="#059669" strokeWidth="5" strokeLinecap="round"/>
+            <circle cx="175" cy="27" r="4" fill="#6ee7b7" opacity="0.9"/>
+
+            {/* Person 5 - right */}
+            <circle cx="194" cy="30" r="9" fill="#d97706"/>
+            <rect x="189" y="40" width="10" height="22" rx="5" fill="#d97706"/>
+            <line x1="194" y1="46" x2="180" y2="34" stroke="#d97706" strokeWidth="5" strokeLinecap="round"/>
+            <line x1="194" y1="46" x2="207" y2="32" stroke="#d97706" strokeWidth="5" strokeLinecap="round"/>
+
+            {/* Ground line */}
+            <line x1="20" y1="74" x2="200" y2="74" stroke="#374151" strokeWidth="1.5" strokeLinecap="round"/>
+
+            {/* Music notes */}
+            <text x="8" y="55" fontSize="10" fill="#a78bfa" opacity="0.8">♪</text>
+            <text x="205" y="50" fontSize="10" fill="#f9a8d4" opacity="0.8">♫</text>
+          </svg>
+        </div>
+
         <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
           Find your next <span className="text-brand-400">party</span>
         </h1>

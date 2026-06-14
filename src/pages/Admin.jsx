@@ -14,7 +14,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -194,7 +194,7 @@ export default function Admin() {
       ...(isScheduled && { status: 'scheduled', scheduled_at: new Date(`${form.publish_date}T${form.publish_time}`).toISOString() }),
     };
     // Include optional columns only if they exist in the schema
-    const full = { ...base, city: form.city.trim() || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, recurrence: form.recurrence };
+    const full = { ...base, city: form.city.trim() || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
 
     let { error } = await supabase.from('events').insert(full);
 
@@ -205,7 +205,7 @@ export default function Admin() {
     }
 
     if (error) { setFormError(error.message); setFormLoading(false); return; }
-    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -368,6 +368,17 @@ export default function Admin() {
               <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="Paste any map link…" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">
+                <span className="inline-flex items-center gap-1.5">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+                  Google Meet Link <span className="text-gray-600">(optional — visible to RSVPed guests only)</span>
+                </span>
+              </label>
+              <input type="url" value={form.meet_link} onChange={e => setForm(f => ({ ...f, meet_link: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="https://meet.google.com/xxx-xxxx-xxx" />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Recurrence <span className="text-gray-600">(auto-reposts after event ends)</span></label>

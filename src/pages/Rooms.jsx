@@ -73,7 +73,7 @@ export default function Rooms() {
     setLoading(true);
     const { data } = await supabase
       .from('chat_rooms')
-      .select('id, event_id, events(id, title, date, status)')
+      .select('id, event_id, events(id, title, date, status, meet_link)')
       .order('created_at', { ascending: false });
     setRooms(data ?? []);
     if (data?.length > 0) {
@@ -224,6 +224,26 @@ export default function Rooms() {
                 </p>
               </div>
             </div>
+
+            {/* Pinned Google Meet banner */}
+            {activeRoom?.events?.meet_link && !isEnded && (
+              <div className="shrink-0 flex items-center gap-2.5 px-4 py-2.5 bg-green-950/60 border-b border-green-800/40">
+                <span className="text-xs text-green-400 font-medium flex items-center gap-1.5 shrink-0">
+                  📌 Meet link
+                </span>
+                <a
+                  href={activeRoom.events.meet_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-green-300 hover:text-green-100 font-semibold truncate transition-colors"
+                >
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
+                    <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
+                  </svg>
+                  Join Google Meet ↗
+                </a>
+              </div>
+            )}
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-1 scrollbar-hide">

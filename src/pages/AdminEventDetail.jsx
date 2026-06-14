@@ -13,7 +13,7 @@ export default function AdminEventDetail() {
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [form, setForm] = useState({
     title: '', description: '', date: '', time: '',
-    venue: '', city: '', capacity: '', status: 'active', image_url: '', maps_url: '', recurrence: 'none',
+    venue: '', city: '', capacity: '', status: 'active', image_url: '', maps_url: '', meet_link: '', recurrence: 'none',
     publish_date: '', publish_time: '',
   });
   const [saving, setSaving] = useState(false);
@@ -67,6 +67,7 @@ export default function AdminEventDetail() {
       image_url_2: data.image_url_2 ?? '',
       image_url_3: data.image_url_3 ?? '',
       maps_url: data.maps_url ?? '',
+      meet_link: data.meet_link ?? '',
       recurrence: data.recurrence ?? 'none',
       publish_date: data.scheduled_at ? new Date(data.scheduled_at).toISOString().split('T')[0] : '',
       publish_time: data.scheduled_at ? new Date(data.scheduled_at).toTimeString().slice(0, 5) : '',
@@ -105,10 +106,8 @@ export default function AdminEventDetail() {
         ? new Date(`${form.publish_date}T${form.publish_time}`).toISOString()
         : null,
     };
-    // Only include maps_url if column exists — set to null when blank
-    if (form.maps_url !== undefined) {
-      payload.maps_url = form.maps_url.trim() || null;
-    }
+    if (form.maps_url !== undefined) payload.maps_url = form.maps_url.trim() || null;
+    if (form.meet_link !== undefined) payload.meet_link = form.meet_link.trim() || null;
 
     const { error } = await supabase.from('events').update(payload).eq('id', eventId);
 
@@ -247,6 +246,17 @@ export default function AdminEventDetail() {
           <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
             placeholder="Paste any map link…" />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">
+            <span className="inline-flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 001 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+              Google Meet Link <span className="text-gray-600">(RSVPed guests only)</span>
+            </span>
+          </label>
+          <input type="url" value={form.meet_link} onChange={e => setForm(f => ({ ...f, meet_link: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+            placeholder="https://meet.google.com/xxx-xxxx-xxx" />
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1">Recurrence <span className="text-gray-600">(auto-reposts after event ends)</span></label>
