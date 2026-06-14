@@ -41,7 +41,7 @@ export default function Admin() {
   const [archivedLoading, setArchivedLoading] = useState(false);
 
   // Profile
-  const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '' });
+  const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '', bio: '', country: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileMsgType, setProfileMsgType] = useState('success');
@@ -82,7 +82,7 @@ export default function Admin() {
   useEffect(() => {
     if (!profile || (!isMainAdmin && !isSubAdmin)) return;
     fetchStats(); fetchEvents(); fetchCitySuggestions();
-    setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' });
+    setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '', bio: profile.bio ?? '', country: profile.country ?? '' });
   }, [profile]);
 
   // Load tab-specific data when tab opens
@@ -271,6 +271,8 @@ export default function Admin() {
     const { error } = await supabase.from('profiles').update({
       full_name: profileForm.full_name.trim(),
       company_name: profileForm.company_name.trim() || null,
+      bio: profileForm.bio.trim() || null,
+      country: profileForm.country || null,
     }).eq('id', session.user.id);
     if (error) { setProfileMsgType('error'); setProfileMsg(error.message); }
     else { await refreshProfile(); setProfileMsgType('success'); setProfileMsg('✓ Profile updated!'); setTimeout(() => setProfileMsg(''), 3000); }
@@ -630,11 +632,17 @@ export default function Admin() {
       {/* ── View 4: Profile ── */}
       {view === 4 && (
         <div className="max-w-md">
-          <h2 className="text-lg font-semibold text-white mb-1">Organiser Profile</h2>
-          <p className="text-xs text-gray-500 mb-5">Shown on event pages so attendees know who's hosting.</p>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-lg font-semibold text-white">Organiser Profile</h2>
+            <a href={`/organizer/${session?.user?.id}`} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-brand-400 hover:text-brand-300 border border-brand-800 hover:border-brand-600 px-3 py-1.5 rounded-lg transition-colors">
+              View public page ↗
+            </a>
+          </div>
+          <p className="text-xs text-gray-500 mb-5">This is what attendees see when they visit your organiser page.</p>
           <form onSubmit={saveProfile} className="space-y-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Person Name *</label>
+              <label className="block text-xs text-gray-400 mb-1">Full Name *</label>
               <input required value={profileForm.full_name} onChange={e => setProfileForm(f => ({ ...f, full_name: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="Your full name" />
@@ -644,6 +652,21 @@ export default function Admin() {
               <input value={profileForm.company_name} onChange={e => setProfileForm(f => ({ ...f, company_name: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="e.g. Expat Stuttgart e.V." />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Bio <span className="text-gray-600">(shown on your public page)</span></label>
+              <textarea value={profileForm.bio} onChange={e => setProfileForm(f => ({ ...f, bio: e.target.value }))}
+                rows={3} maxLength={300}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"
+                placeholder="Tell attendees about yourself or your club…" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Country</label>
+              <select value={profileForm.country} onChange={e => setProfileForm(f => ({ ...f, country: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
+                <option value="">— Select country —</option>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
             <div className="pt-1 pb-2 border-t border-gray-800">
               <p className="text-xs text-gray-600 mt-2">Email: <span className="text-gray-400">{session?.user?.email}</span></p>
