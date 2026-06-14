@@ -25,7 +25,7 @@ export default function EventDetail() {
     setLoading(true);
     const { data: evt } = await supabase
       .from('events')
-      .select('*, profiles!events_created_by_fkey(full_name, company_name)')
+      .select('*, profiles!events_created_by_fkey(full_name, company_name, avatar_url)')
       .eq('id', eventId)
       .maybeSingle();
     if (!evt || evt.deleted_at) { navigate('/'); return; }
@@ -156,8 +156,11 @@ export default function EventDetail() {
         {event.profiles && (
           <Link to={`/organizer/${event.created_by}`}
             className="flex items-center gap-3 mb-5 px-3 py-3 rounded-xl bg-gray-800/50 border border-gray-800 hover:border-brand-700 hover:bg-gray-800 transition-colors group">
-            <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-sm font-bold text-white shrink-0">
-              {event.profiles.full_name?.[0]?.toUpperCase() ?? '?'}
+            <div className="w-9 h-9 rounded-full bg-brand-700 flex items-center justify-center text-sm font-bold text-white shrink-0 overflow-hidden">
+              {event.profiles.avatar_url
+                ? <img src={event.profiles.avatar_url} alt={event.profiles.full_name} className="w-full h-full object-cover" />
+                : (event.profiles.full_name?.[0]?.toUpperCase() ?? '?')
+              }
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs text-gray-500">Organised by</p>

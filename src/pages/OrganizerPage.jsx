@@ -19,7 +19,6 @@ export default function OrganizerPage() {
   async function fetchAll() {
     setLoading(true);
 
-    // Fetch profile — use select * to avoid missing-column errors
     const { data: prof } = await supabase
       .from('profiles')
       .select('*')
@@ -33,7 +32,6 @@ export default function OrganizerPage() {
     }
     setOrganizer(prof);
 
-    // Fetch their non-archived events
     const { data: events } = await supabase
       .from('events')
       .select('*')
@@ -47,7 +45,6 @@ export default function OrganizerPage() {
     setUpcoming(allEvents.filter(e => e.status === 'active' && new Date(e.date) >= now));
     setPast(allEvents.filter(e => e.status === 'ended' || e.status === 'cancelled' || (e.status === 'active' && new Date(e.date) < now)));
 
-    // RSVP counts
     const counts = {};
     await Promise.all(allEvents.map(async (e) => {
       const { count } = await supabase.from('rsvps').select('*', { count: 'exact', head: true }).eq('event_id', e.id);
@@ -59,11 +56,11 @@ export default function OrganizerPage() {
 
   if (loading) return (
     <div className="max-w-4xl mx-auto px-4 py-10 space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="w-20 h-20 rounded-full bg-gray-800 animate-pulse" />
-        <div className="space-y-2 flex-1">
-          <div className="h-6 w-48 rounded bg-gray-800 animate-pulse" />
-          <div className="h-4 w-32 rounded bg-gray-800 animate-pulse" />
+      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 animate-pulse">
+        <div className="h-48 sm:h-64 bg-gray-800" />
+        <div className="px-5 sm:px-8 pb-6 pt-14">
+          <div className="h-6 w-48 rounded bg-gray-800 mb-2" />
+          <div className="h-4 w-32 rounded bg-gray-800" />
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -87,41 +84,76 @@ export default function OrganizerPage() {
   const totalEvents = upcoming.length + past.length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+    <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10">
 
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-white transition-colors mb-6">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-white transition-colors mb-5">
         ← Back
       </button>
 
-      {/* Profile header */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 sm:p-7 mb-8">
-        <div className="flex items-start gap-4 sm:gap-6">
+      {/* Profile card */}
+      <div className="rounded-2xl overflow-hidden border border-gray-800 bg-gray-900 mb-8 shadow-xl">
+
+        {/* Cover banner */}
+        <div className="relative h-40 sm:h-56 md:h-64 bg-gradient-to-br from-brand-800 via-purple-900 to-gray-900">
+          {organizer.cover_url && (
+            <img
+              src={organizer.cover_url}
+              alt="Cover"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          {/* Gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
+        </div>
+
+        {/* Info section — avatar overlaps cover */}
+        <div className="relative px-5 sm:px-8 pb-6 sm:pb-8">
           {/* Avatar */}
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center text-xl sm:text-2xl font-extrabold text-white shrink-0 select-none">
-            {initials}
+          <div className="absolute -top-10 sm:-top-12 left-5 sm:left-8">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full ring-4 ring-gray-900 overflow-hidden bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shrink-0 shadow-lg">
+              {organizer.avatar_url
+                ? <img src={organizer.avatar_url} alt={organizer.full_name} className="w-full h-full object-cover" />
+                : <span className="text-2xl sm:text-3xl font-extrabold text-white select-none">{initials}</span>
+              }
+            </div>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">{organizer.full_name}</h1>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-brand-900/50 text-brand-400 border border-brand-800/50">
-                {organizer.role === 'admin' ? '🛡️ Organiser' : '🎉 Host'}
-              </span>
+          {/* Name & meta — pushed down to clear avatar */}
+          <div className="pt-12 sm:pt-14">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-tight">{organizer.full_name}</h1>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-brand-900/60 text-brand-300 border border-brand-700/50 shrink-0">
+                    {organizer.role === 'admin' ? '🛡️ Organiser' : '🎉 Host'}
+                  </span>
+                </div>
+                {organizer.company_name && (
+                  <p className="text-sm sm:text-base text-brand-400 font-medium mb-2">{organizer.company_name}</p>
+                )}
+              </div>
             </div>
 
-            {organizer.company_name && (
-              <p className="text-sm text-brand-400 font-medium mb-2">{organizer.company_name}</p>
-            )}
-
             {organizer.bio && (
-              <p className="text-sm text-gray-300 leading-relaxed mb-3">{organizer.bio}</p>
+              <p className="text-sm sm:text-base text-gray-300 leading-relaxed mb-4 max-w-2xl">{organizer.bio}</p>
             )}
 
-            <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-              {organizer.country && <span>🌍 {organizer.country}</span>}
-              <span>🎉 {totalEvents} event{totalEvents !== 1 ? 's' : ''} hosted</span>
+            {/* Stats row */}
+            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-500">
+              {organizer.country && (
+                <span className="flex items-center gap-1.5">
+                  <span>🌍</span><span>{organizer.country}</span>
+                </span>
+              )}
+              <span className="flex items-center gap-1.5">
+                <span>🎉</span>
+                <span><span className="text-white font-semibold">{totalEvents}</span> event{totalEvents !== 1 ? 's' : ''} hosted</span>
+              </span>
               {upcoming.length > 0 && (
-                <span className="text-green-400">● {upcoming.length} upcoming</span>
+                <span className="flex items-center gap-1.5 text-green-400">
+                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                  <span><span className="font-semibold">{upcoming.length}</span> upcoming</span>
+                </span>
               )}
             </div>
           </div>
@@ -158,7 +190,7 @@ export default function OrganizerPage() {
             Past Events
             <span className="text-sm text-gray-500 font-normal">({past.length})</span>
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-60">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 opacity-70">
             {past.map(event => (
               <EventCard key={event.id} event={event} rsvpCount={rsvpCounts[event.id] ?? 0} />
             ))}

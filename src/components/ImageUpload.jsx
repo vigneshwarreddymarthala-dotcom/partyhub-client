@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function ImageUpload({ currentUrl, onUpload, label = 'Event Photo' }) {
+export default function ImageUpload({ currentUrl, onUpload, label = 'Event Photo', folder = 'events', aspect = 'landscape' }) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(currentUrl || null);
   const inputRef = useRef(null);
@@ -17,7 +17,7 @@ export default function ImageUpload({ currentUrl, onUpload, label = 'Event Photo
 
     setUploading(true);
     const ext = file.name.split('.').pop() || 'jpg';
-    const path = `events/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
     const { data, error } = await supabase.storage
       .from('event-images')
@@ -49,8 +49,8 @@ export default function ImageUpload({ currentUrl, onUpload, label = 'Event Photo
 
       {/* Preview */}
       {preview && (
-        <div className="relative mb-2 rounded-xl overflow-hidden h-36 bg-gray-800">
-          <img src={preview} alt="Event" className="w-full h-full object-cover" />
+        <div className={`relative mb-2 rounded-xl overflow-hidden bg-gray-800 ${aspect === 'square' ? 'h-36 w-36' : aspect === 'banner' ? 'h-32 w-full' : 'h-36 w-full'}`}>
+          <img src={preview} alt="Preview" className="w-full h-full object-cover" />
           <button
             type="button"
             onClick={() => { setPreview(null); onUpload(''); }}

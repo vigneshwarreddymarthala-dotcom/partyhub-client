@@ -41,7 +41,7 @@ export default function Admin() {
   const [archivedLoading, setArchivedLoading] = useState(false);
 
   // Profile
-  const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '', bio: '', country: '' });
+  const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '', bio: '', country: '', avatar_url: '', cover_url: '' });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileMsgType, setProfileMsgType] = useState('success');
@@ -82,7 +82,7 @@ export default function Admin() {
   useEffect(() => {
     if (!profile || (!isMainAdmin && !isSubAdmin)) return;
     fetchStats(); fetchEvents(); fetchCitySuggestions();
-    setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '', bio: profile.bio ?? '', country: profile.country ?? '' });
+    setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '', bio: profile.bio ?? '', country: profile.country ?? '', avatar_url: profile.avatar_url ?? '', cover_url: profile.cover_url ?? '' });
   }, [profile]);
 
   // Load tab-specific data when tab opens
@@ -273,6 +273,8 @@ export default function Admin() {
       company_name: profileForm.company_name.trim() || null,
       bio: profileForm.bio.trim() || null,
       country: profileForm.country || null,
+      avatar_url: profileForm.avatar_url || null,
+      cover_url: profileForm.cover_url || null,
     }).eq('id', session.user.id);
     if (error) { setProfileMsgType('error'); setProfileMsg(error.message); }
     else { await refreshProfile(); setProfileMsgType('success'); setProfileMsg('✓ Profile updated!'); setTimeout(() => setProfileMsg(''), 3000); }
@@ -364,140 +366,199 @@ export default function Admin() {
 
       {/* ── View 1: Create Event ── */}
       {view === 1 && (
-        <div className="max-w-lg">
-          <h2 className="text-lg font-semibold text-white mb-4">New Event</h2>
-          <form onSubmit={handleCreateEvent} className="space-y-4">
+        <div className="max-w-5xl">
+          <div className="flex items-center justify-between mb-5">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Title *</label>
-              <input required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="Summer Rooftop Party" />
+              <h2 className="text-xl font-bold text-white">New Event</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Fill in the details below and hit Post Event when ready.</p>
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Description</label>
-              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                rows={3} maxLength={500}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"
-                placeholder="Tell guests what to expect…" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Event Date * <span className="text-gray-600">(when the party happens)</span></label>
-                <input required type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500" />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">Event Time *</label>
-                <input required type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500" />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Venue *</label>
-              <input required value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="123 Main St" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">City *</label>
-              <input required list="city-suggestions" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="e.g. Berlin, Munich, Hamburg" />
-              <datalist id="city-suggestions">
-                {citySuggestions.map(c => <option key={c} value={c} />)}
-              </datalist>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Target Country <span className="text-gray-600">(optional — leave blank to show to everyone)</span></label>
-              <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
-                <option value="">🌍 All countries (everyone sees this)</option>
-                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Capacity *</label>
-              <input required type="number" min={1} value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="50" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Ticket Price (€) <span className="text-gray-600">— leave blank for free</span></label>
-              <input type="number" min={0} step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="0.00" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Google Maps Link <span className="text-gray-600">(optional)</span></label>
-              <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="Paste any map link…" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">
-                <span className="inline-flex items-center gap-1.5">
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
-                  Google Meet Link <span className="text-gray-600">(optional — visible to RSVPed guests only)</span>
-                </span>
-              </label>
-              <input type="url" value={form.meet_link} onChange={e => setForm(f => ({ ...f, meet_link: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="https://meet.google.com/xxx-xxxx-xxx" />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Recurrence <span className="text-gray-600">(auto-reposts after event ends)</span></label>
-              <select value={form.recurrence} onChange={e => setForm(f => ({ ...f, recurrence: e.target.value }))}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500">
-                <option value="none">One-time event</option>
-                <option value="hourly_1">Every 1 hour</option>
-                <option value="hourly_2">Every 2 hours</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
-            {/* Schedule toggle */}
-            <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-3 space-y-3">
-              <button type="button" onClick={() => setForm(f => ({ ...f, is_scheduled: !f.is_scheduled }))}
-                className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🕐</span>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-white">Schedule Post</p>
-                    <p className="text-xs text-gray-500">Choose when this post becomes visible — must be before the event date</p>
-                  </div>
+          </div>
+          <form onSubmit={handleCreateEvent}>
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+              {/* ── LEFT COLUMN: Core event info ── */}
+              <div className="lg:col-span-3 space-y-4">
+
+                {/* Title */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Title *</label>
+                  <input required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                    placeholder="Summer Rooftop Party" />
                 </div>
-                <div className={`w-10 h-5 rounded-full transition-colors relative ${form.is_scheduled ? 'bg-brand-600' : 'bg-gray-700'}`}>
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${form.is_scheduled ? 'left-5' : 'left-0.5'}`} />
+
+                {/* Description */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Description</label>
+                  <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    rows={4} maxLength={500}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30 resize-none"
+                    placeholder="Tell guests what to expect…" />
                 </div>
-              </button>
-              {form.is_scheduled && (
-                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-800">
+
+                {/* Date + Time */}
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Publish Date *</label>
-                    <input required type="date" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Event Date *</label>
+                    <input required type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30" />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Publish Time *</label>
-                    <input required type="time" value={form.publish_time} onChange={e => setForm(f => ({ ...f, publish_time: e.target.value }))}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Event Time *</label>
+                    <input required type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30" />
                   </div>
                 </div>
-              )}
+
+                {/* Venue + City */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Venue *</label>
+                    <input required value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="The Grand Hall" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">City *</label>
+                    <input required list="city-suggestions" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="Berlin, Munich…" />
+                    <datalist id="city-suggestions">
+                      {citySuggestions.map(c => <option key={c} value={c} />)}
+                    </datalist>
+                  </div>
+                </div>
+
+                {/* Capacity + Price */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Capacity *</label>
+                    <input required type="number" min={1} value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="50" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Ticket Price (€) <span className="text-gray-600 font-normal">— blank = free</span></label>
+                    <input type="number" min={0} step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="0.00" />
+                  </div>
+                </div>
+
+                {/* Target Country */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1.5">Target Country <span className="text-gray-600 font-normal">(leave blank to show to everyone)</span></label>
+                  <select value={form.target_country} onChange={e => setForm(f => ({ ...f, target_country: e.target.value }))}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30">
+                    <option value="">🌍 All countries (everyone sees this)</option>
+                    {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                {/* Maps + Meet in a row */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">Google Maps Link <span className="text-gray-600 font-normal">(optional)</span></label>
+                    <input type="text" value={form.maps_url} onChange={e => setForm(f => ({ ...f, maps_url: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="Paste map link…" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-400 mb-1.5">
+                      <span className="inline-flex items-center gap-1">
+                        <svg viewBox="0 0 24 24" className="w-3 h-3" fill="currentColor"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>
+                        Meet Link <span className="text-gray-600 font-normal">(RSVPed only)</span>
+                      </span>
+                    </label>
+                    <input type="url" value={form.meet_link} onChange={e => setForm(f => ({ ...f, meet_link: e.target.value }))}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3.5 py-3 text-sm text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500/30"
+                      placeholder="https://meet.google.com/…" />
+                  </div>
+                </div>
+
+                {/* Schedule toggle */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-4 space-y-3">
+                  <button type="button" onClick={() => setForm(f => ({ ...f, is_scheduled: !f.is_scheduled }))}
+                    className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">🕐</span>
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-white">Schedule Post</p>
+                        <p className="text-xs text-gray-500">Go live at a specific date &amp; time</p>
+                      </div>
+                    </div>
+                    <div className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${form.is_scheduled ? 'bg-brand-600' : 'bg-gray-700'}`}>
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${form.is_scheduled ? 'left-5' : 'left-0.5'}`} />
+                    </div>
+                  </button>
+                  {form.is_scheduled && (
+                    <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-800">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Publish Date *</label>
+                        <input required type="date" value={form.publish_date} onChange={e => setForm(f => ({ ...f, publish_date: e.target.value }))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Publish Time *</label>
+                        <input required type="time" value={form.publish_time} onChange={e => setForm(f => ({ ...f, publish_time: e.target.value }))}
+                          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* ── RIGHT COLUMN: Photos + Settings ── */}
+              <div className="lg:col-span-2 space-y-4">
+
+                {/* Photos card */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 space-y-3">
+                  <p className="text-xs font-semibold text-gray-300 uppercase tracking-wider">Event Photos</p>
+                  <p className="text-xs text-gray-500 -mt-1">Up to 3 images. First is the cover.</p>
+                  <ImageUpload label="Photo 1 — Cover" currentUrl={form.image_url} onUpload={(url) => setForm(f => ({ ...f, image_url: url }))} />
+                  <ImageUpload label="Photo 2" currentUrl={form.image_url_2} onUpload={(url) => setForm(f => ({ ...f, image_url_2: url }))} />
+                  <ImageUpload label="Photo 3" currentUrl={form.image_url_3} onUpload={(url) => setForm(f => ({ ...f, image_url_3: url }))} />
+                </div>
+
+                {/* Recurrence card */}
+                <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4">
+                  <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-3">Recurrence</label>
+                  <p className="text-xs text-gray-500 mb-3">Auto-reposts after event ends.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { value: 'none',     label: 'One-time' },
+                      { value: 'daily',    label: 'Daily' },
+                      { value: 'weekly',   label: 'Weekly' },
+                      { value: 'monthly',  label: 'Monthly' },
+                      { value: 'hourly_1', label: 'Every 1h' },
+                      { value: 'hourly_2', label: 'Every 2h' },
+                    ].map(opt => (
+                      <button key={opt.value} type="button"
+                        onClick={() => setForm(f => ({ ...f, recurrence: opt.value }))}
+                        className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors border ${
+                          form.recurrence === opt.value
+                            ? 'bg-brand-600 border-brand-500 text-white'
+                            : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white'
+                        }`}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Error / Success */}
+                {formError && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-xl px-4 py-3">{formError}</p>}
+                {formSuccess && <p className="text-green-400 text-xs bg-green-900/20 border border-green-800/40 rounded-xl px-4 py-3">{formSuccess}</p>}
+
+                {/* Submit */}
+                <button type="submit" disabled={formLoading}
+                  className="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-bold text-white transition-colors disabled:opacity-60 shadow-lg shadow-brand-900/40">
+                  {formLoading ? 'Creating…' : '🚀 Post Event'}
+                </button>
+              </div>
+
             </div>
-            <div className="space-y-2">
-              <p className="text-xs text-gray-400">Event Photos <span className="text-gray-600">(up to 3, first is the cover)</span></p>
-              <ImageUpload label="Photo 1 (Cover)" currentUrl={form.image_url} onUpload={(url) => setForm(f => ({ ...f, image_url: url }))} />
-              <ImageUpload label="Photo 2" currentUrl={form.image_url_2} onUpload={(url) => setForm(f => ({ ...f, image_url_2: url }))} />
-              <ImageUpload label="Photo 3" currentUrl={form.image_url_3} onUpload={(url) => setForm(f => ({ ...f, image_url_3: url }))} />
-            </div>
-            {formError && <p className="text-red-400 text-xs bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">{formError}</p>}
-            {formSuccess && <p className="text-green-400 text-xs bg-green-900/20 border border-green-800/40 rounded-lg px-3 py-2">{formSuccess}</p>}
-            <button type="submit" disabled={formLoading}
-              className="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-sm font-semibold text-white transition-colors disabled:opacity-60">
-              {formLoading ? 'Creating…' : 'Post Event'}
-            </button>
           </form>
         </div>
       )}
@@ -631,7 +692,7 @@ export default function Admin() {
 
       {/* ── View 4: Profile ── */}
       {view === 4 && (
-        <div className="max-w-md">
+        <div className="max-w-lg">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-lg font-semibold text-white">Organiser Profile</h2>
             <a href={`/organizer/${session?.user?.id}`} target="_blank" rel="noopener noreferrer"
@@ -640,7 +701,54 @@ export default function Admin() {
             </a>
           </div>
           <p className="text-xs text-gray-500 mb-5">This is what attendees see when they visit your organiser page.</p>
+
+          {/* Cover + Avatar preview card */}
+          <div className="mb-5 rounded-2xl overflow-hidden border border-gray-800 bg-gray-900">
+            {/* Cover banner */}
+            <div className="relative h-32 bg-gradient-to-br from-brand-800 to-purple-900">
+              {profileForm.cover_url && (
+                <img src={profileForm.cover_url} alt="Cover" className="w-full h-full object-cover" />
+              )}
+              <span className="absolute bottom-2 right-2 text-xs text-white/50 bg-black/40 px-2 py-0.5 rounded-full">Cover photo</span>
+            </div>
+            {/* Avatar overlapping cover */}
+            <div className="relative px-5 pb-4">
+              <div className="absolute -top-9 left-5">
+                <div className="w-16 h-16 rounded-full ring-4 ring-gray-900 overflow-hidden bg-gradient-to-br from-brand-600 to-purple-700 flex items-center justify-center shrink-0">
+                  {profileForm.avatar_url
+                    ? <img src={profileForm.avatar_url} alt="Logo" className="w-full h-full object-cover" />
+                    : <span className="text-lg font-extrabold text-white select-none">
+                        {(profileForm.full_name || 'O').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
+                  }
+                </div>
+              </div>
+              <div className="pt-10">
+                <p className="text-sm font-semibold text-white">{profileForm.full_name || 'Your Name'}</p>
+                {profileForm.company_name && <p className="text-xs text-brand-400">{profileForm.company_name}</p>}
+              </div>
+            </div>
+          </div>
+
           <form onSubmit={saveProfile} className="space-y-4">
+            {/* Logo / Avatar upload */}
+            <ImageUpload
+              label="Profile Logo / Avatar"
+              currentUrl={profileForm.avatar_url}
+              folder="profiles"
+              aspect="square"
+              onUpload={url => setProfileForm(f => ({ ...f, avatar_url: url }))}
+            />
+
+            {/* Cover image upload */}
+            <ImageUpload
+              label="Cover / Background Image"
+              currentUrl={profileForm.cover_url}
+              folder="profiles"
+              aspect="banner"
+              onUpload={url => setProfileForm(f => ({ ...f, cover_url: url }))}
+            />
+
             <div>
               <label className="block text-xs text-gray-400 mb-1">Full Name *</label>
               <input required value={profileForm.full_name} onChange={e => setProfileForm(f => ({ ...f, full_name: e.target.value }))}
