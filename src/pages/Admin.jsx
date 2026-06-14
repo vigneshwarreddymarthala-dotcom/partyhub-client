@@ -14,7 +14,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -26,6 +26,9 @@ export default function Admin() {
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState('');
   const [profileMsgType, setProfileMsgType] = useState('success');
+
+  // City suggestions for create form
+  const [citySuggestions, setCitySuggestions] = useState([]);
 
   // Applications (main admin only)
   const [applications, setApplications] = useState([]);
@@ -58,7 +61,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!profile || (!isMainAdmin && !isSubAdmin)) return;
-    fetchStats(); fetchEvents();
+    fetchStats(); fetchEvents(); fetchCitySuggestions();
     setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' });
   }, [profile]);
 
@@ -116,6 +119,12 @@ export default function Admin() {
       .not('invited_email', 'is', null)
       .order('created_at', { ascending: false });
     setPendingInvites(data ?? []);
+  }
+
+  async function fetchCitySuggestions() {
+    const { data } = await supabase.from('events').select('city');
+    const unique = [...new Set((data ?? []).map(e => e.city).filter(Boolean))].sort();
+    setCitySuggestions(unique);
   }
 
   async function fetchApplications() {
@@ -185,7 +194,7 @@ export default function Admin() {
       ...(isScheduled && { status: 'scheduled', scheduled_at: new Date(`${form.publish_date}T${form.publish_time}`).toISOString() }),
     };
     // Include optional columns only if they exist in the schema
-    const full = { ...base, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, recurrence: form.recurrence };
+    const full = { ...base, city: form.city.trim() || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, recurrence: form.recurrence };
 
     let { error } = await supabase.from('events').insert(full);
 
@@ -196,7 +205,7 @@ export default function Admin() {
     }
 
     if (error) { setFormError(error.message); setFormLoading(false); return; }
-    setForm({ title: '', description: '', date: '', time: '', venue: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -337,7 +346,16 @@ export default function Admin() {
               <label className="block text-xs text-gray-400 mb-1">Venue *</label>
               <input required value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
-                placeholder="123 Main St, City" />
+                placeholder="123 Main St" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">City *</label>
+              <input required list="city-suggestions" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="e.g. Berlin, Munich, Hamburg" />
+              <datalist id="city-suggestions">
+                {citySuggestions.map(c => <option key={c} value={c} />)}
+              </datalist>
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Capacity *</label>

@@ -10,9 +10,10 @@ export default function AdminEventDetail() {
   const navigate = useNavigate();
 
   const [event, setEvent] = useState(null);
+  const [citySuggestions, setCitySuggestions] = useState([]);
   const [form, setForm] = useState({
     title: '', description: '', date: '', time: '',
-    venue: '', capacity: '', status: 'active', image_url: '', maps_url: '', recurrence: 'none',
+    venue: '', city: '', capacity: '', status: 'active', image_url: '', maps_url: '', recurrence: 'none',
     publish_date: '', publish_time: '',
   });
   const [saving, setSaving] = useState(false);
@@ -28,7 +29,7 @@ export default function AdminEventDetail() {
     if (authLoading) return;
     const role = profile?.role;
     if (!session || (role !== 'admin' && role !== 'sub_admin')) { navigate('/admin/login'); return; }
-    fetchEvent(); fetchGuests();
+    fetchEvent(); fetchGuests(); fetchCities();
   }, [eventId, authLoading, profile]);
 
   useEffect(() => {
@@ -39,6 +40,12 @@ export default function AdminEventDetail() {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [eventId]);
+
+  async function fetchCities() {
+    const { data } = await supabase.from('events').select('city');
+    const unique = [...new Set((data ?? []).map(e => e.city).filter(Boolean))].sort();
+    setCitySuggestions(unique);
+  }
 
   async function fetchEvent() {
     const { data } = await supabase.from('events').select('*').eq('id', eventId).maybeSingle();
@@ -53,6 +60,7 @@ export default function AdminEventDetail() {
       date: date.toISOString().split('T')[0],
       time: date.toTimeString().slice(0, 5),
       venue: data.venue ?? '',
+      city: data.city ?? '',
       capacity: String(data.capacity ?? ''),
       status: data.status ?? 'active',
       image_url: data.image_url ?? '',
@@ -86,6 +94,7 @@ export default function AdminEventDetail() {
       description: form.description.trim() || null,
       date: datetime,
       venue: form.venue.trim(),
+      city: form.city.trim() || null,
       capacity: parseInt(form.capacity),
       status: form.status,
       image_url: form.image_url || null,
@@ -192,6 +201,15 @@ export default function AdminEventDetail() {
           <label className="block text-xs text-gray-400 mb-1">Venue</label>
           <input required value={form.venue} onChange={e => setForm(f => ({ ...f, venue: e.target.value }))}
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">City</label>
+          <input list="city-suggestions-edit" value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))}
+            placeholder="e.g. Berlin, Munich"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500" />
+          <datalist id="city-suggestions-edit">
+            {citySuggestions.map(c => <option key={c} value={c} />)}
+          </datalist>
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div>

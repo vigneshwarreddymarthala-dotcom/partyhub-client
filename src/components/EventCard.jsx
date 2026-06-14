@@ -43,7 +43,7 @@ export default function EventCard({ event, rsvpCount }) {
 
           <div className="flex items-center justify-between text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <span>📍</span> {event.venue}
+              <span>📍</span> {event.city ? event.city : event.venue}
             </span>
             <span>
               {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
