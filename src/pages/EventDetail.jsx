@@ -131,6 +131,13 @@ export default function EventDetail() {
             <span>👥</span>
             <span>{rsvpCount} / {event.capacity} going</span>
           </div>
+          <div className="flex items-center gap-2">
+            <span>🎟️</span>
+            {event.price > 0
+              ? <span className="text-white font-semibold">€{Number(event.price).toFixed(2)}</span>
+              : <span className="text-green-400 font-medium">Free entry</span>
+            }
+          </div>
           {event.recurrence && event.recurrence !== 'none' && (
             <div className="flex items-center gap-2">
               <span>🔁</span>

@@ -14,7 +14,7 @@ export default function Admin() {
 
   // Events / Create
   const [stats, setStats] = useState({ activeEvents: 0, totalUsers: 0, totalRSVPs: 0 });
-  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+  const [form, setForm] = useState({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -194,7 +194,7 @@ export default function Admin() {
       ...(isScheduled && { status: 'scheduled', scheduled_at: new Date(`${form.publish_date}T${form.publish_time}`).toISOString() }),
     };
     // Include optional columns only if they exist in the schema
-    const full = { ...base, city: form.city.trim() || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
+    const full = { ...base, city: form.city.trim() || null, price: form.price !== '' ? parseFloat(form.price) : null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
 
     let { data: insertedEvent, error } = await supabase.from('events').insert(full).select('id').single();
 
@@ -212,7 +212,7 @@ export default function Admin() {
       await supabase.from('chat_rooms').insert({ event_id: insertedEvent.id });
     }
 
-    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
+    setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', price: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
     setFormLoading(false);
@@ -369,6 +369,12 @@ export default function Admin() {
               <input required type="number" min={1} value={form.capacity} onChange={e => setForm(f => ({ ...f, capacity: e.target.value }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
                 placeholder="50" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Ticket Price (€) <span className="text-gray-600">— leave blank for free</span></label>
+              <input type="number" min={0} step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-3 text-sm text-white focus:outline-none focus:border-brand-500"
+                placeholder="0.00" />
             </div>
             <div>
               <label className="block text-xs text-gray-400 mb-1">Google Maps Link <span className="text-gray-600">(optional)</span></label>

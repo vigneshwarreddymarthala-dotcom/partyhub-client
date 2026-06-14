@@ -13,7 +13,7 @@ export default function AdminEventDetail() {
   const [citySuggestions, setCitySuggestions] = useState([]);
   const [form, setForm] = useState({
     title: '', description: '', date: '', time: '',
-    venue: '', city: '', capacity: '', status: 'active', image_url: '', maps_url: '', meet_link: '', recurrence: 'none',
+    venue: '', city: '', capacity: '', price: '', status: 'active', image_url: '', maps_url: '', meet_link: '', recurrence: 'none',
     publish_date: '', publish_time: '',
   });
   const [saving, setSaving] = useState(false);
@@ -66,6 +66,7 @@ export default function AdminEventDetail() {
       image_url: data.image_url ?? '',
       image_url_2: data.image_url_2 ?? '',
       image_url_3: data.image_url_3 ?? '',
+      price: data.price != null ? String(data.price) : '',
       maps_url: data.maps_url ?? '',
       meet_link: data.meet_link ?? '',
       recurrence: data.recurrence ?? 'none',
@@ -108,6 +109,7 @@ export default function AdminEventDetail() {
     };
     if (form.maps_url !== undefined) payload.maps_url = form.maps_url.trim() || null;
     if (form.meet_link !== undefined) payload.meet_link = form.meet_link.trim() || null;
+    payload.price = form.price !== '' ? parseFloat(form.price) : null;
 
     const { error } = await supabase.from('events').update(payload).eq('id', eventId);
 
@@ -226,6 +228,12 @@ export default function AdminEventDetail() {
               <option value="cancelled">Cancelled</option>
             </select>
           </div>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-400 mb-1">Ticket Price (€) <span className="text-gray-600">— leave blank for free</span></label>
+          <input type="number" min={0} step="0.01" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500"
+            placeholder="0.00" />
         </div>
         {form.status === 'scheduled' && (
           <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-yellow-900/10 border border-yellow-800/30">

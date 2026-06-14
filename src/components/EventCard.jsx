@@ -21,6 +21,10 @@ export default function EventCard({ event, rsvpCount }) {
               🎉
             </div>
           )}
+          {/* Price badge */}
+          <span className={`absolute top-3 left-3 px-2 py-0.5 rounded-full text-xs font-bold ${event.price > 0 ? 'bg-brand-700/90 text-white' : 'bg-green-800/90 text-green-300'}`}>
+            {event.price > 0 ? `€${Number(event.price).toFixed(2)}` : 'Free'}
+          </span>
           {/* Status badge */}
           {isEnded && (
             <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-800/90 text-gray-400">
