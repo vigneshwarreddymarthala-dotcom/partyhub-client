@@ -20,6 +20,8 @@ export default function Admin() {
   const [formLoading, setFormLoading] = useState(false);
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
+  const [archivedEvents, setArchivedEvents] = useState([]);
+  const [archivedLoading, setArchivedLoading] = useState(false);
 
   // Profile
   const [profileForm, setProfileForm] = useState({ full_name: '', company_name: '' });
@@ -47,6 +49,7 @@ export default function Admin() {
     { label: '📊 Analytics', short: 'Stats' },
     { label: '➕ Create', short: 'Create' },
     { label: '🗂 Events', short: 'Events' },
+    { label: '🗃 Archived', short: 'Archive' },
     { label: '👤 Profile', short: 'Profile' },
     ...(isMainAdmin ? [{ label: '👥 Team', short: 'Team' }] : []),
     ...(isMainAdmin ? [{ label: '📋 Applications', short: 'Apps' }] : []),
@@ -65,10 +68,11 @@ export default function Admin() {
     setProfileForm({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' });
   }, [profile]);
 
-  // Load team data when Team tab is opened
+  // Load tab-specific data when tab opens
   useEffect(() => {
-    if (view === 4 && isMainAdmin) { fetchSubAdmins(); fetchPendingInvites(); }
-    if (view === 5 && isMainAdmin) { fetchApplications(); }
+    if (view === 3) fetchArchivedEvents();
+    if (view === 5 && isMainAdmin) { fetchSubAdmins(); fetchPendingInvites(); }
+    if (view === 6 && isMainAdmin) fetchApplications();
   }, [view]);
 
   // ── Data fetching ───────────────────────────────────────────────
@@ -93,11 +97,20 @@ export default function Admin() {
 
   async function fetchEvents() {
     setEventsLoading(true);
-    let query = supabase.from('events').select('*, rsvps(id), chat_rooms(id)').order('date', { ascending: false });
+    let query = supabase.from('events').select('*, rsvps(id), chat_rooms(id)').is('deleted_at', null).order('date', { ascending: false });
     if (isSubAdmin) query = query.eq('created_by', session.user.id);
     const { data } = await query;
     setEvents(data ?? []);
     setEventsLoading(false);
+  }
+
+  async function fetchArchivedEvents() {
+    setArchivedLoading(true);
+    let query = supabase.from('events').select('*, rsvps(id)').not('deleted_at', 'is', null).order('deleted_at', { ascending: false });
+    if (isSubAdmin) query = query.eq('created_by', session.user.id);
+    const { data } = await query;
+    setArchivedEvents(data ?? []);
+    setArchivedLoading(false);
   }
 
   async function fetchSubAdmins() {
@@ -219,10 +232,21 @@ export default function Admin() {
     setTimeout(() => setFormSuccess(''), 3000);
   }
 
-  async function deleteEvent(id) {
-    if (!confirm('Delete this event? This will remove the chat room and all RSVPs.')) return;
-    await supabase.from('events').delete().eq('id', id);
+  async function archiveEvent(id) {
+    if (!confirm('Archive this event? It will be hidden from the public but you can restore it anytime.')) return;
+    await supabase.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', id);
     fetchEvents(); fetchStats();
+  }
+
+  async function restoreEvent(id) {
+    await supabase.from('events').update({ deleted_at: null }).eq('id', id);
+    fetchArchivedEvents(); fetchEvents(); fetchStats();
+  }
+
+  async function hardDeleteEvent(id) {
+    if (!confirm('Permanently delete? This cannot be undone — all RSVPs and chat messages will be lost.')) return;
+    await supabase.from('events').delete().eq('id', id);
+    fetchArchivedEvents(); fetchStats();
   }
 
   async function saveProfile(e) {
@@ -515,9 +539,9 @@ export default function Admin() {
                         className="flex-1 sm:flex-none text-center px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors">
                         Manage
                       </Link>
-                      <button onClick={() => deleteEvent(ev.id)}
-                        className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-red-900/30 hover:bg-red-900/60 text-xs text-red-400 transition-colors">
-                        Delete
+                      <button onClick={() => archiveEvent(ev.id)}
+                        className="flex-1 sm:flex-none px-3 py-2 rounded-lg bg-yellow-900/30 hover:bg-yellow-900/60 text-xs text-yellow-400 transition-colors">
+                        Archive
                       </button>
                     </div>
                   </div>
@@ -528,8 +552,58 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ── View 3: Profile ── */}
+      {/* ── View 3: Archived ── */}
       {view === 3 && (
+        <div>
+          <h2 className="text-lg font-semibold text-white mb-1">Archived Events</h2>
+          <p className="text-xs text-gray-500 mb-4">Hidden from the public. Restore to make them live again, or delete permanently.</p>
+          {archivedLoading ? (
+            <div className="space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-800 animate-pulse" />)}</div>
+          ) : archivedEvents.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-3xl mb-2">🗃</p>
+              <p className="text-gray-500 text-sm">No archived events.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {archivedEvents.map((ev) => (
+                <div key={ev.id} className="bg-gray-900/60 border border-gray-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 opacity-80">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-medium text-gray-300 text-sm truncate">{ev.title}</p>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/40 text-yellow-500 border border-yellow-800/40">Archived</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 mt-0.5">
+                      <span className="text-xs text-gray-600">
+                        {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
+                      <span className="text-gray-700">·</span>
+                      <span className="text-xs text-gray-600">{ev.venue}</span>
+                      <span className="text-gray-700">·</span>
+                      <span className="text-xs text-gray-600">👥 {ev.rsvps?.length ?? 0} RSVPs</span>
+                      <span className="text-gray-700">·</span>
+                      <span className="text-xs text-gray-600">Archived {new Date(ev.deleted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => restoreEvent(ev.id)}
+                      className="px-3 py-2 rounded-lg bg-green-900/30 hover:bg-green-900/60 text-xs text-green-400 font-medium transition-colors">
+                      ↩ Restore
+                    </button>
+                    <button onClick={() => hardDeleteEvent(ev.id)}
+                      className="px-3 py-2 rounded-lg bg-red-900/30 hover:bg-red-900/60 text-xs text-red-400 transition-colors">
+                      Delete Forever
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── View 4: Profile ── */}
+      {view === 4 && (
         <div className="max-w-md">
           <h2 className="text-lg font-semibold text-white mb-1">Organiser Profile</h2>
           <p className="text-xs text-gray-500 mb-5">Shown on event pages so attendees know who's hosting.</p>
@@ -562,8 +636,8 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ── View 4: Team (main admin only) ── */}
-      {view === 4 && isMainAdmin && (
+      {/* ── View 5: Team (main admin only) ── */}
+      {view === 5 && isMainAdmin && (
         <div className="max-w-2xl space-y-6">
 
           {/* Add allowed email */}
@@ -648,8 +722,8 @@ export default function Admin() {
         </div>
       )}
 
-      {/* ── View 5: Applications (main admin only) ── */}
-      {view === 5 && isMainAdmin && (
+      {/* ── View 6: Applications (main admin only) ── */}
+      {view === 6 && isMainAdmin && (
         <div className="max-w-2xl space-y-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold text-white">Join Team Applications</h2>

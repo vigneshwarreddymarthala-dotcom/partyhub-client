@@ -28,7 +28,7 @@ export default function EventDetail() {
       .select('*, profiles!events_created_by_fkey(full_name, company_name)')
       .eq('id', eventId)
       .maybeSingle();
-    if (!evt) { navigate('/'); return; }
+    if (!evt || evt.deleted_at) { navigate('/'); return; }
     setEvent(evt);
     const { count } = await supabase.from('rsvps').select('*', { count: 'exact', head: true }).eq('event_id', eventId);
     setRsvpCount(count ?? 0);

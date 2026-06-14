@@ -28,7 +28,7 @@ export default function Landing() {
     setLoading(true);
     await supabase.rpc('publish_due_scheduled_events');
     let query = supabase.from('events').select('*').order('date', { ascending: true })
-      .neq('status', 'scheduled');
+      .neq('status', 'scheduled').is('deleted_at', null);
     if (filter === 'active') query = query.eq('status', 'active');
     if (cityFilter !== 'all') query = query.eq('city', cityFilter);
     const { data } = await query;
