@@ -196,15 +196,22 @@ export default function Admin() {
     // Include optional columns only if they exist in the schema
     const full = { ...base, city: form.city.trim() || null, image_url_2: form.image_url_2 || null, image_url_3: form.image_url_3 || null, maps_url: form.maps_url.trim() || null, meet_link: form.meet_link.trim() || null, recurrence: form.recurrence };
 
-    let { error } = await supabase.from('events').insert(full);
+    let { data: insertedEvent, error } = await supabase.from('events').insert(full).select('id').single();
 
     // Retry with base columns only if optional columns are missing
     if (error?.message?.includes('column') || error?.code === '42703') {
-      const { error: e2 } = await supabase.from('events').insert(base);
+      const { data: d2, error: e2 } = await supabase.from('events').insert(base).select('id').single();
       error = e2;
+      insertedEvent = d2;
     }
 
     if (error) { setFormError(error.message); setFormLoading(false); return; }
+
+    // Auto-create a chat room for the new event
+    if (insertedEvent?.id) {
+      await supabase.from('chat_rooms').insert({ event_id: insertedEvent.id });
+    }
+
     setForm({ title: '', description: '', date: '', time: '', venue: '', city: '', capacity: '', image_url: '', image_url_2: '', image_url_3: '', maps_url: '', meet_link: '', recurrence: 'none', is_scheduled: false, publish_date: '', publish_time: '' });
     await Promise.all([fetchStats(), fetchEvents()]);
     setFormSuccess('✓ Event created!');
@@ -482,11 +489,20 @@ export default function Admin() {
                       </div>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      {roomId && (
+                      {roomId ? (
                         <button onClick={() => navigate(`/admin/rooms?room=${roomId}`)}
                           className="w-9 h-9 rounded-lg bg-brand-900/50 hover:bg-brand-800/60 text-brand-400 flex items-center justify-center transition-colors"
                           title="Open chat room">
                           💬
+                        </button>
+                      ) : (
+                        <button onClick={async () => {
+                          await supabase.from('chat_rooms').insert({ event_id: ev.id });
+                          fetchEvents();
+                        }}
+                          className="px-2 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-400 hover:text-white transition-colors"
+                          title="Create chat room">
+                          + Room
                         </button>
                       )}
                       <Link to={`/admin/event/${ev.id}`}
