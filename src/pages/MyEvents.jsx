@@ -32,9 +32,15 @@ export default function MyEvents() {
     setRsvps(prev => prev.filter(r => r.id !== rsvpId));
   }
 
+  const isEventExpired = (ev) => !ev || new Date(ev.date) < new Date();
+  const isEventEnded = (ev) => !ev || ev.status !== 'active' || isEventExpired(ev);
+
+  const upcomingCount = rsvps.filter(r => !isEventEnded(r.events)).length;
+  const endedCount = rsvps.filter(r => isEventEnded(r.events)).length;
+
   const filtered = rsvps.filter(r => {
-    if (filter === 'upcoming') return r.events?.status === 'active';
-    if (filter === 'ended') return r.events?.status !== 'active';
+    if (filter === 'upcoming') return !isEventEnded(r.events);
+    if (filter === 'ended') return isEventEnded(r.events);
     return true;
   });
 
@@ -50,8 +56,8 @@ export default function MyEvents() {
       <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
         {[
           { key: 'all', label: `All (${rsvps.length})` },
-          { key: 'upcoming', label: `Upcoming (${rsvps.filter(r => r.events?.status === 'active').length})` },
-          { key: 'ended', label: `Ended (${rsvps.filter(r => r.events?.status !== 'active').length})` },
+          { key: 'upcoming', label: `Upcoming (${upcomingCount})` },
+          { key: 'ended', label: `Ended (${endedCount})` },
         ].map(({ key, label }) => (
           <button key={key} onClick={() => setFilter(key)}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${filter === key ? 'bg-brand-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
@@ -87,13 +93,14 @@ export default function MyEvents() {
           {filtered.map(({ id: rsvpId, checked_in, events: ev }) => {
             if (!ev) return null;
             const date = new Date(ev.date);
-            const isEnded = ev.status !== 'active';
+            const expired = isEventExpired(ev);
+            const ended = isEventEnded(ev);
             return (
               <div key={rsvpId}
                 className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden hover:border-gray-700 transition-colors">
                 <div className="flex gap-0">
-                  {/* Color strip / image */}
-                  <div className={`w-2 shrink-0 ${isEnded ? 'bg-gray-700' : 'bg-brand-500'}`} />
+                  {/* Color strip */}
+                  <div className={`w-2 shrink-0 ${ended ? 'bg-gray-700' : 'bg-brand-500'}`} />
 
                   <div className="flex-1 px-4 py-4 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -101,13 +108,17 @@ export default function MyEvents() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <h3 className="font-semibold text-white text-base truncate">{ev.title}</h3>
-                          {/* Badges */}
                           {checked_in && (
                             <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-green-900/60 text-green-400 border border-green-800/50">
                               ✓ Checked in
                             </span>
                           )}
-                          {isEnded && (
+                          {expired && (
+                            <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-orange-900/40 text-orange-400 border border-orange-800/40">
+                              ⏰ Expired
+                            </span>
+                          )}
+                          {!expired && ev.status !== 'active' && (
                             <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-500">
                               Ended
                             </span>
@@ -126,7 +137,7 @@ export default function MyEvents() {
 
                       {/* Actions */}
                       <div className="flex gap-2 shrink-0 flex-wrap sm:flex-nowrap">
-                        {!isEnded && (
+                        {!ended && (
                           <Link to={`/rooms`}
                             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-semibold text-white transition-colors">
                             💬 Chat
@@ -136,7 +147,7 @@ export default function MyEvents() {
                           className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors">
                           View
                         </Link>
-                        {!isEnded && (
+                        {!ended && (
                           <button onClick={() => cancelRSVP(rsvpId, ev.title)}
                             className="px-3 py-2 rounded-xl border border-red-900/50 text-xs text-red-400 hover:bg-red-900/20 transition-colors">
                             Cancel
