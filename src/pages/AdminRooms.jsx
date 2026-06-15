@@ -165,6 +165,7 @@ export default function AdminRooms() {
           {rooms.map((room) => {
             const ev = room.events;
             const isActive = activeRoom?.id === room.id;
+            const isExpired = ev && new Date(ev.date) < new Date();
             const isEnded = ev?.status !== 'active';
             return (
               <button key={room.id} onClick={() => openRoom(room)}
@@ -175,9 +176,11 @@ export default function AdminRooms() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-white truncate">{ev?.title ?? 'Unnamed Event'}</p>
                   <p className="text-xs mt-0.5 truncate">
-                    {isEnded
-                      ? <span className="text-gray-600">Ended</span>
-                      : <span className="text-green-500">● Live</span>}
+                    {isExpired
+                      ? <span className="text-orange-400">⏰ Expired</span>
+                      : isEnded
+                        ? <span className="text-gray-600">Ended</span>
+                        : <span className="text-green-500">● Live</span>}
                     <span className="text-gray-600 ml-2">
                       {new Date(ev?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
@@ -217,7 +220,9 @@ export default function AdminRooms() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-white truncate">{activeRoom.events?.title}</p>
                 <p className="text-xs text-gray-500">
-                  {activeRoom.events?.status === 'active' ? '● Live event' : 'Event ended'} · Admin chat
+                  {activeRoom.events && new Date(activeRoom.events.date) < new Date()
+                    ? '⏰ Expired'
+                    : activeRoom.events?.status === 'active' ? '● Live event' : 'Event ended'} · Admin chat
                 </p>
               </div>
               {/* Link to event manage page */}

@@ -577,11 +577,15 @@ export default function Admin() {
                         <span className="text-gray-700">·</span>
                         <span className="text-xs text-gray-500 truncate max-w-[140px]">{ev.venue}</span>
                         <span className="text-gray-700">·</span>
-                        <span className={`text-xs font-medium ${ev.status === 'active' ? 'text-green-400' : ev.status === 'scheduled' ? 'text-yellow-400' : 'text-gray-500'}`}>
-                          {ev.status === 'scheduled' && ev.scheduled_at
-                            ? `🕐 ${new Date(ev.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
-                            : ev.status}
-                        </span>
+                        {ev.status === 'active' && new Date(ev.date) < new Date() ? (
+                          <span className="text-xs font-medium text-orange-400">⏰ Expired</span>
+                        ) : (
+                          <span className={`text-xs font-medium ${ev.status === 'active' ? 'text-green-400' : ev.status === 'scheduled' ? 'text-yellow-400' : 'text-gray-500'}`}>
+                            {ev.status === 'scheduled' && ev.scheduled_at
+                              ? `🕐 ${new Date(ev.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+                              : ev.status}
+                          </span>
+                        )}
                         <span className="text-gray-700">·</span>
                         <span className="text-xs text-brand-400 font-medium">👥 {rsvpCount} / {ev.capacity}</span>
                         {ev.recurrence && ev.recurrence !== 'none' && (
