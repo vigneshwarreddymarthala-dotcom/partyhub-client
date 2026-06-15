@@ -43,7 +43,7 @@ export default function AdminRegister() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 py-10">
+    <div className="min-h-[100dvh] bg-gray-950 flex flex-col items-center justify-center px-4 py-10 pt-safe">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-14 h-14 rounded-full bg-brand-700 flex items-center justify-center text-2xl mx-auto mb-4">🛡️</div>

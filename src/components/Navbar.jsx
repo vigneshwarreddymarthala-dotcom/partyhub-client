@@ -23,7 +23,7 @@ export default function Navbar() {
 
   return (
     <>
-    <nav className="sticky top-0 z-50 border-b border-gray-800 overflow-hidden" style={{ background: 'rgba(17,24,39,0.92)' }}>
+    <nav className="sticky top-0 z-50 border-b border-gray-800 overflow-hidden pt-safe" style={{ background: 'rgba(17,24,39,0.92)' }}>
 
       {/* Party lights */}
       <div className="absolute inset-0 pointer-events-none">

@@ -123,13 +123,13 @@ export default function AdminRooms() {
   }
 
   if (authLoading || loading) return (
-    <div className="h-screen flex items-center justify-center bg-gray-950">
+    <div className="h-[100dvh] flex items-center justify-center bg-gray-950">
       <p className="text-gray-600 text-sm">Loading rooms…</p>
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-gray-950 overflow-hidden">
+    <div className="flex h-[100dvh] bg-gray-950 overflow-hidden">
 
       {/* ─── LEFT: Rooms sidebar ──────────────────────────────── */}
       <div className={`
@@ -191,7 +191,7 @@ export default function AdminRooms() {
       </div>
 
       {/* ─── RIGHT: Chat ──────────────────────────────────────── */}
-      <div className={`flex-1 flex flex-col min-w-0 ${screen === 'list' ? 'hidden sm:flex' : 'flex'}`}
+      <div className={`flex-1 flex flex-col min-w-0 overflow-x-hidden ${screen === 'list' ? 'hidden sm:flex' : 'flex'}`}
         style={{ background: 'radial-gradient(ellipse at top, #1a0a2e 0%, #070710 100%)' }}>
 
         {!activeRoom ? (
@@ -261,7 +261,7 @@ export default function AdminRooms() {
             </div>
 
             {/* Input — admin can always type */}
-            <form onSubmit={sendMessage} className="flex items-end gap-2 px-3 py-3 bg-gray-900/90 border-t border-gray-800 shrink-0">
+            <form onSubmit={sendMessage} className="flex items-end gap-2 px-3 bg-gray-900/90 border-t border-gray-800 shrink-0 w-full min-w-0 overflow-hidden" style={{ paddingTop: '0.75rem', paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
               <input
                 ref={inputRef}
                 value={newMsg}

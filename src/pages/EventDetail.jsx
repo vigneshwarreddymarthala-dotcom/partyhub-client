@@ -74,6 +74,9 @@ export default function EventDetail() {
   const mapsHref = event.maps_url
     ? /^https?:\/\//i.test(event.maps_url) ? event.maps_url : `https://${event.maps_url}`
     : null;
+  const meetHref = event.meet_link && /^https?:\/\//i.test(event.meet_link)
+    ? event.meet_link
+    : null;
   const images = [event.image_url, event.image_url_2, event.image_url_3].filter(Boolean);
 
   return (
@@ -194,9 +197,9 @@ export default function EventDetail() {
         )}
 
         {/* Google Meet link — visible only to RSVPed users */}
-        {myRsvp && event.meet_link && !isEnded && (
+        {myRsvp && meetHref && !isEnded && (
           <a
-            href={event.meet_link}
+            href={meetHref}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl bg-green-900/30 border border-green-700/50 hover:bg-green-800/40 text-sm font-semibold text-green-300 transition-colors mb-4"

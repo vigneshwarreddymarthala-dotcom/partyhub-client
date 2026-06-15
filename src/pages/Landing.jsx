@@ -50,16 +50,16 @@ export default function Landing() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-12">
       {/* Hero */}
-      <div className="text-center mb-10 sm:mb-14 max-w-2xl mx-auto">
+      <div className="text-center mb-6 sm:mb-14 max-w-2xl mx-auto">
         <span className="inline-block text-xs font-semibold tracking-widest text-brand-400 uppercase mb-4 px-3 py-1.5 rounded-full bg-brand-900/50 border border-brand-800/60">
           For Expats in Germany
         </span>
 
         {/* Party people illustration */}
-        <div className="flex justify-center mb-5">
-          <svg viewBox="0 0 220 90" className="w-48 sm:w-56 h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <div className="flex justify-center mb-4">
+          <svg viewBox="0 0 220 90" className="w-36 sm:w-56 h-auto" fill="none" xmlns="http://www.w3.org/2000/svg">
             {/* Confetti dots */}
             <circle cx="18" cy="18" r="3" fill="#a855f7" opacity="0.7"/>
             <circle cx="200" cy="14" r="2.5" fill="#f472b6" opacity="0.7"/>
@@ -114,7 +114,7 @@ export default function Landing() {
           </svg>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
           Find your next <span className="text-brand-400">party</span>
         </h1>
         <p className="text-gray-400 text-base sm:text-lg leading-relaxed px-2">
@@ -137,7 +137,10 @@ export default function Landing() {
       </div>
 
       {/* Filters — sticky on mobile */}
-      <div className="sticky top-14 z-10 bg-gray-950/95 backdrop-blur -mx-4 px-4 pt-3 pb-2 mb-3 sm:relative sm:top-auto sm:bg-transparent sm:mx-0 sm:px-0 sm:pt-0 sm:backdrop-blur-none">
+      <div
+        className="sticky z-10 bg-gray-950/95 backdrop-blur -mx-4 px-4 pt-3 pb-2 mb-3 sm:relative sm:top-auto sm:bg-transparent sm:mx-0 sm:px-0 sm:pt-0 sm:backdrop-blur-none"
+        style={{ top: 'calc(3.5rem + env(safe-area-inset-top))' }}
+      >
 
       {/* Status filter tabs */}
       <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide pb-1">
@@ -186,7 +189,7 @@ export default function Landing() {
           {/* Dropdown results */}
           {cityDropdownOpen && (
             <div className="absolute top-full left-0 mt-1 w-full max-w-xs bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-20 overflow-hidden">
-              <div className="max-h-52 overflow-y-auto">
+              <div className="max-h-40 sm:max-h-52 overflow-y-auto">
                 {/* All cities option */}
                 <button
                   onMouseDown={() => { setCityFilter('all'); setCitySearch(''); setCityDropdownOpen(false); }}

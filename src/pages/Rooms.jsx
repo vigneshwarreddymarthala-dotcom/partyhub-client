@@ -138,13 +138,13 @@ export default function Rooms() {
   const isEnded = activeRoom?.events?.status === 'ended';
 
   if (loading) return (
-    <div className="h-[calc(100vh-56px)] flex items-center justify-center">
+    <div className="h-[calc(100dvh-56px)] flex items-center justify-center">
       <div className="text-gray-600 text-sm">Loading rooms…</div>
     </div>
   );
 
   if (rooms.length === 0 && !kicked) return (
-    <div className="h-[calc(100vh-56px)] flex flex-col items-center justify-center px-6 text-center">
+    <div className="h-[calc(100dvh-56px)] flex flex-col items-center justify-center px-6 text-center">
       <p className="text-5xl mb-4">💬</p>
       <p className="font-semibold text-gray-300 text-lg">No rooms yet</p>
       <p className="text-gray-500 text-sm mt-1 max-w-xs">RSVP to an event to unlock its private chat room.</p>
@@ -152,7 +152,7 @@ export default function Rooms() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden">
+    <div className="flex h-[calc(100dvh-56px)] overflow-hidden">
 
       {/* ─── LEFT: Rooms list ─────────────────────────────────── */}
       <div className={`
@@ -197,7 +197,7 @@ export default function Rooms() {
       </div>
 
       {/* ─── RIGHT: Chat area ─────────────────────────────────── */}
-      <div className={`flex-1 flex flex-col min-w-0 ${screen === 'list' ? 'hidden sm:flex' : 'flex'}`}
+      <div className={`flex-1 flex flex-col min-w-0 overflow-x-hidden ${screen === 'list' ? 'hidden sm:flex' : 'flex'}`}
         style={{ background: 'radial-gradient(ellipse at top, #1a0a2e 0%, #0a0a0f 100%)' }}>
 
         {/* Kicked state */}
@@ -301,7 +301,7 @@ export default function Rooms() {
                 This event has ended. Chat is read-only.
               </div>
             ) : (
-              <form onSubmit={sendMessage} className="flex items-end gap-2 px-3 py-3 bg-gray-900/80 border-t border-gray-800 shrink-0">
+              <form onSubmit={sendMessage} className="flex items-end gap-2 px-3 bg-gray-900/80 border-t border-gray-800 shrink-0 w-full min-w-0 overflow-hidden" style={{ paddingTop: '0.75rem', paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
                 <input ref={inputRef} value={newMsg} onChange={e => setNewMsg(e.target.value)}
                   placeholder={isAdmin ? 'Message as admin…' : 'Message…'}
                   maxLength={1000}

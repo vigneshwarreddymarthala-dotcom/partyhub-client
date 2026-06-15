@@ -59,7 +59,7 @@ export default function Login() {
   // Waiting-for-email-confirmation state
   if (mode === 'confirm') {
     return (
-      <div className="min-h-[calc(100vh-56px)] flex items-center justify-center p-4">
+      <div className="min-h-[calc(100dvh-56px)] flex items-center justify-center p-4">
         <div className="w-full max-w-sm text-center">
           <div className="text-5xl mb-4">📬</div>
           <h2 className="text-xl font-bold text-white mb-2">Check your email</h2>
@@ -79,7 +79,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px)] flex items-center justify-center p-4">
+    <div className="min-h-[calc(100dvh-56px)] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-extrabold text-brand-400">PartyHub</Link>
